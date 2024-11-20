@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-
+using System.Net.Sockets;
+using System.Net;
 using System.Windows.Forms;
 using System.Threading;
 using libImage;
+using TcpIp;
 
 namespace AcquisitionSmartek
 {
@@ -14,10 +16,12 @@ namespace AcquisitionSmartek
         Rectangle m_rect;
         PixelFormat m_pixelFormat;
         UInt32 m_pixelType;
+        TCP tcp;
 
         public Form1()
         {
             InitializeComponent();
+            tcp = new TCP(client: IPAddress.Loopback, server: IPAddress.Loopback, port: 8001);
         }
 
         private void boutInit_Click(object sender, EventArgs e)
@@ -130,9 +134,9 @@ namespace AcquisitionSmartek
                             bitmap = (Bitmap)Img.result;
                             //this.pbImage.Height = bitmap.Height;
                             //this.pbImage.Width = bitmap.Width;
+                            tcp.sendImage(bitmap);
                             this.pbImage.Image = bitmap;
                         }
-
 
                         this.pbImage.Invalidate();
                     }
