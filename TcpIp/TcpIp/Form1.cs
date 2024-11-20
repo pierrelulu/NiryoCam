@@ -19,8 +19,8 @@ namespace TcpIp
         {
             InitializeComponent();
 
-            m_ipAdrServeur = IPAddress.Parse("169.254.161.209");  // Adresse locale
-            m_ipAdrClient = IPAddress.Parse("192.168.62.109");   // Adresse distante
+            m_ipAdrServeur = IPAddress.Parse("127.0.0.1");  // Adresse locale
+            m_ipAdrClient = IPAddress.Parse("127.0.0.1");   // Adresse distante
             m_numPort = 8001;
         }
 
@@ -33,7 +33,7 @@ namespace TcpIp
             this.tbCom.AppendText("Connexion établie\r\n");
 
             // Charger l'image depuis un fichier
-            string imagePath = "path_to_image.png"; // Remplacez par le chemin de votre image
+            string imagePath = "C:/Users/luttm/Documents/Devoirs/FISA3/Application Csharp/NiryoCam/TcpIp/image_test.png"; // Remplacez par le chemin de votre image
             byte[] imageBytes = File.ReadAllBytes(imagePath);
 
             // Envoyer la taille de l'image
