@@ -88,7 +88,7 @@ namespace AcquisitionSmartek
 
             if (camStatus != TCPstatus.CLIENT_CONNECTED)
             {
-                camStatus = TCPstatus.UNKNOWN;
+                camStatus = TCPstatus.CLOSE;
             }
         }
 
@@ -168,8 +168,8 @@ namespace AcquisitionSmartek
                 m_device.SetIntegerNodeValue("TLParamsLocked", 0);
                 m_device.Disconnect();
             }
-
-            gige.GigEVisionSDK.ExitGigEVisionAPI();
+            if(camStatus == TCPstatus.CLIENT_CONNECTED)
+                gige.GigEVisionSDK.ExitGigEVisionAPI();
 
             this.Close();
         }
@@ -209,7 +209,13 @@ namespace AcquisitionSmartek
         public void changeCAMstatus()
         {
             string ip = "0.0.0.0";
-            if(m_device != null && m_device.IsConnected())
+            if(camStatus == TCPstatus.CLIENT_CONNECTED && (m_device == null || !m_device.IsConnected()) )
+            {
+                camStatus = TCPstatus.UNKNOWN;
+                gige.GigEVisionSDK.ExitGigEVisionAPI();
+
+            }
+            if (m_device != null && m_device.IsConnected())
             { 
                 camStatus = TCPstatus.CLIENT_CONNECTED;
                 ip = Common.IpAddrToString(m_device.GetIpAddress());
