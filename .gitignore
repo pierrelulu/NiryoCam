@@ -396,3 +396,17 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+AcquisitionSmartek/Properties/
+
+*.csproj
+
+AcquisitionSmartek/App.config
+
+AcquisitionSmartek/Form1.resx
+
+*.vcxproj
+
+*.filters
+
+*.sln
