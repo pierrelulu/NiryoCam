@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Windows.Forms;
 using System.Threading;
+using System.Threading.Tasks;
 using libImage;
 using TcpIp;
 
@@ -17,28 +18,38 @@ namespace AcquisitionSmartek
         PixelFormat m_pixelFormat;
         UInt32 m_pixelType;
         TCP tcp;
+        TCPstatus camStatus = TCPstatus.CLOSE;
 
         public Form1()
         {
             InitializeComponent();
             tcp = new TCP(client: IPAddress.Loopback, server: IPAddress.Loopback, port: 8001);
+
+            Thread backgroundThread = new Thread(UpdateLabelsInBackground);
+            backgroundThread.IsBackground = true;
+            backgroundThread.Start();
         }
 
-        private void boutInit_Click(object sender, EventArgs e)
-        {
-            bool cameraConnected = false;
+        // ...
 
+        async private void boutInit_Click(object sender, EventArgs e)
+        {
+            camStatus = TCPstatus.CLIENT_OPEN;
             // initialize GigEVision API
             gige.GigEVisionSDK.InitGigEVisionAPI();
             gige.IGigEVisionAPI smcsVisionApi = gige.GigEVisionSDK.GetGigEVisionAPI();
 
             if (!smcsVisionApi.IsUsingKernelDriver())
             {
-                MessageBox.Show("Warning: Smartek Filter Driver not loaded.");
+                //MessageBox.Show("Warning: Smartek Filter Driver not loaded.");
             }
 
-            // discover all devices on network
-            smcsVisionApi.FindAllDevices(3.0);
+            // discover all devices on network asynchronously
+            await Task.Run(() =>
+            {
+                smcsVisionApi.FindAllDevices(3.0);
+            });
+
             gige.IDevice[] devices = smcsVisionApi.GetAllDevices();
 
             //MessageBox.Show(devices.Length.ToString());
@@ -62,11 +73,7 @@ namespace AcquisitionSmartek
 
                 if (m_device != null && m_device.Connect())
                 {
-                    this.lblConnection.BackColor = Color.LimeGreen;
-                    this.lblConnection.Text = "Connection établie";
-                    this.lblAdrIP.BackColor = Color.LimeGreen;
-                    this.lblAdrIP.Text = "Adresse IP : " + Common.IpAddrToString(m_device.GetIpAddress());
-                    this.lblNomCamera.Text = m_device.GetManufacturerName() + " : " + m_device.GetModelName();
+
 
                     // disable trigger mode
                     bool status = m_device.SetStringNodeValue("TriggerMode", "Off");
@@ -75,14 +82,13 @@ namespace AcquisitionSmartek
                     // start acquisition
                     status = m_device.SetIntegerNodeValue("TLParamsLocked", 1);
                     status = m_device.CommandNodeExecute("AcquisitionStart");
-                    cameraConnected = true;
+                    camStatus = TCPstatus.CLIENT_CONNECTED;
                 }
             }
 
-            if (!cameraConnected)
+            if (camStatus != TCPstatus.CLIENT_CONNECTED)
             {
-                this.lblAdrIP.BackColor = Color.Red;
-                this.lblAdrIP.Text = "Erreur de connection!";
+                camStatus = TCPstatus.UNKNOWN;
             }
         }
 
@@ -96,7 +102,7 @@ namespace AcquisitionSmartek
             timAcq.Stop();
         }
 
-        private void timAcq_Tick(object sender, EventArgs e)
+        async private void timAcq_Tick(object sender, EventArgs e)
         {
             timAcq.Stop();
             if (m_device != null && m_device.IsConnected())
@@ -134,7 +140,9 @@ namespace AcquisitionSmartek
                             bitmap = (Bitmap)Img.result;
                             //this.pbImage.Height = bitmap.Height;
                             //this.pbImage.Width = bitmap.Width;
-                            tcp.sendImage(bitmap);
+                            if (tcp.Status() == TCPstatus.CLIENT_CONNECTED) {
+                                await tcp.sendImageOnce(bitmap); 
+                            }
                             this.pbImage.Image = bitmap;
                         }
 
@@ -166,5 +174,65 @@ namespace AcquisitionSmartek
             this.Close();
         }
 
+        private void changeCOMstatus(Label stateLabel, TCPstatus status, Label ipLabel, string ip)
+        {
+            ipLabel.Text = "Adresse IP : " + ip;
+            switch (status)
+            {
+                case TCPstatus.CLIENT_OPEN:
+                    stateLabel.BackColor = Color.Yellow;
+                    stateLabel.Text = "Connection en cours";
+                    break;
+
+                case TCPstatus.CLIENT_CONNECTED:
+                    stateLabel.BackColor = Color.LimeGreen;
+                    stateLabel.Text = "Connecté";
+                    break;
+
+                case TCPstatus.CLOSE:
+                    stateLabel.BackColor = Color.Orange;
+                    stateLabel.Text = "Déconnecté";
+                    break;
+
+                default:
+                    stateLabel.BackColor = Color.Red;
+                    stateLabel.Text = "Erreur !";
+                    break;
+            }
+        }
+
+        public void changeTCPstatus()
+        {
+            changeCOMstatus(this.labelComTcp, tcp.Status(), this.labelIPtrait, tcp.getServer().ToString());
+        }
+
+        public void changeCAMstatus()
+        {
+            string ip = "0.0.0.0";
+            if(m_device != null && m_device.IsConnected())
+            { 
+                camStatus = TCPstatus.CLIENT_CONNECTED;
+                ip = Common.IpAddrToString(m_device.GetIpAddress());
+                this.lblNomCamera.Text = m_device.GetManufacturerName() + " : " + m_device.GetModelName();
+            }
+
+            changeCOMstatus(lblComCam, camStatus, lblIPcam, ip);
+        }
+
+        private void UpdateLabelsInBackground()
+        {
+            while (true)
+            {
+                changeTCPstatus();
+                changeCAMstatus();
+                Thread.Sleep(100); // Attendez 0.1 seconde
+            }
+        }
+
+        async private void initComImage_Click(object sender, EventArgs e)
+        {
+            await tcp.openClient(tcpLogger);
+            changeTCPstatus();
+        }
     }
 }
