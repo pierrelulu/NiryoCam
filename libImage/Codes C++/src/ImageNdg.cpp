@@ -671,7 +671,7 @@ CImageNdg CImageNdg::morphologie(const std::string methode, const elemStruct& el
         //Calcul de la surface non-nulle de l'element structurant
         for (int i = 0; i < eltStructurant.lireHauteur(); i++)
             for (int j = 0; j < eltStructurant.lireLargeur(); j++)
-				surface += eltStructurant(i, j);
+				surface += (int)eltStructurant(i, j);
 
 
         int moyVal = 0;
@@ -680,7 +680,7 @@ CImageNdg CImageNdg::morphologie(const std::string methode, const elemStruct& el
             for (int j = 0; j < this->lireLargeur(); j++) {
                 for (int k = -dx; k <= dx; k++) {
                     for (int l = -dy; l <= dy; l++) {
-                        moyVal += eltStructurant(k + dx, l + dy) * this->operator()(i + k, j + l); // Gestion des bords par l'accesseur (<0 -> 0, >max -> max)
+                        moyVal += (int)eltStructurant(k + dx, l + dy) * this->operator()(i + k, j + l); // Gestion des bords par l'accesseur (<0 -> 0, >max -> max)
                     }
                 }
 

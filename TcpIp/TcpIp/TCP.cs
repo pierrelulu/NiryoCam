@@ -7,328 +7,432 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
-
+using System.Threading;
+using static System.Windows.Forms.AxHost;
+using System.Data;
+using System.IO;
 public enum TCPstatus
 {
     CLIENT_OPEN,
     CLIENT_CONNECTED,
-    
     SERVER_OPEN,
     SERVER_CONNECTED,
-    
-    CLOSE,
-
+    CLOSED,
     UNKNOWN
 }
-
 namespace TcpIp
 {
-
     public class TCP
     {
         private IPAddress m_ipAdrServeur = IPAddress.Loopback;
         private IPAddress m_ipAdrClient = IPAddress.Loopback;
         private TcpClient tcpClient = null;
         private TcpListener tcpServer = null;
-        private Socket sock = null;
+        private CancellationTokenSource _cts;
+        private readonly object _lock = new object();
+        private const int KeepAliveInterval = 1000; // 1 second
+        private const int KeepAliveTimeout = 10000;  // 5 seconds
+        private DateTime _lastKeepAliveReceived;
         private int m_numPort = 8001;
-
-        private TCPstatus status = TCPstatus.CLOSE;
-
+        private TextBox _logger;
+        private TCPstatus status = TCPstatus.CLOSED;
+        public event Action<Image> OnImageReceived;
         public TCP()
         {
-
         }
-
-        public TCP(IPAddress client, IPAddress server, int port = 8001)
+        public TCP(IPAddress client, IPAddress server, int port = 8001, TextBox logger = null)
         {
             m_ipAdrClient = client;
             m_ipAdrServeur = server;
-            m_numPort = 8001;
+            m_numPort = port;
+            _logger = logger;
         }
-
         public TCPstatus Status()
         {
+            updateStatus();
             return status;
         }
-
+        private void LogMessage(string message)
+        {
+            _logger?.AppendText(message + "\r\n");
+        }
+        private void updateStatus()
+        {
+            if (tcpClient != null)
+            {
+                if (tcpClient.Connected)
+                {
+                    status = TCPstatus.CLIENT_CONNECTED;
+                }
+                else
+                {
+                    status = TCPstatus.CLIENT_OPEN;
+                }
+            }
+            else if (tcpServer != null)
+            {
+                if (tcpServer.Server.IsBound && status != TCPstatus.SERVER_CONNECTED)
+                {
+                    status = TCPstatus.SERVER_OPEN;
+                }
+                else if (tcpServer.Pending())
+                {
+                    status = TCPstatus.SERVER_CONNECTED;
+                }
+            }
+            else
+            {
+                status = TCPstatus.CLOSED;
+            }
+        }
         public void changePort(int port)
         {
             m_numPort = port;
         }
-
         public int getPort()
         {
             return m_numPort;
         }
-
         public void changeClient(IPAddress client)
         {
             m_ipAdrClient = client;
         }
-
         public IPAddress getClient()
         {
             return m_ipAdrClient;
         }
-
         public void changeServer(IPAddress server)
         {
             m_ipAdrServeur = server;
         }
-
         public IPAddress getServer()
         {
             return m_ipAdrServeur;
         }
-
-        async public Task<bool> openClient(TextBox logger = null)
+        public void setLogger(TextBox logger)
+        {
+            _logger = logger;
+        }
+        async public Task<bool> openClient()
         {
             if (status == TCPstatus.SERVER_OPEN || status == TCPstatus.SERVER_CONNECTED)
             {
-                if(logger != null)
-                    logger.AppendText("Serveur déjà en cours d'exécution\r\n");
+                LogMessage("Serveur déjà en cours d'exécution");
                 return false;
             }
-
-            if(tcpClient != null || status == TCPstatus.CLIENT_OPEN || status == TCPstatus.CLIENT_CONNECTED)
+            if (tcpClient != null || status == TCPstatus.CLIENT_CONNECTED)
             {
-                if (logger != null)
-                    logger.AppendText("Connexion déjà établie\r\n");
+                LogMessage("Connexion déjà établie");
                 return false;
             }
-
-            tcpClient = new TcpClient();
-            if (logger != null)
-                logger.AppendText("Connexion en cours...\r\n");
-            status = TCPstatus.CLIENT_OPEN;
-
-            try
+            lock (_lock)
             {
-                await tcpClient.ConnectAsync(m_ipAdrClient, m_numPort);
-                if (logger != null)
-                    logger.AppendText("Connexion établie\r\n");
-                status = TCPstatus.CLIENT_CONNECTED;
-
-                return true;
+                status = TCPstatus.CLIENT_OPEN;
+                tcpClient = new TcpClient();
+                _cts = new CancellationTokenSource();
             }
-            catch (Exception e)
+            LogMessage("Connexion en cours...");
+            while (status == TCPstatus.CLIENT_OPEN)
             {
-                if (logger != null)
-                    logger.AppendText($"Erreur lors de l'envoi de l'image : {e.Message}\r\n");
-                tcpClient = null;
-                status = TCPstatus.CLOSE;
-                return false;
+                try
+                {
+                    await tcpClient.ConnectAsync(m_ipAdrServeur, m_numPort);
+                    lock (_lock) { status = TCPstatus.CLIENT_CONNECTED; }
+                    LogMessage("Client connected to server.");
+                    _ = SendClientKeepAliveAsync();
+                    _ = ReceiveKeepAliveAsync();
+                }
+                catch (SocketException)
+                {
+                    await Task.Delay(1000);
+                }
             }
+            return false;
         }
-
-        public bool closeClient(TextBox logger = null)
+        public bool closeClient()
         {
-            if (tcpClient == null || status == TCPstatus.CLOSE || status == TCPstatus.UNKNOWN)
-            {
-                if (logger != null)
-                    logger.AppendText("Connexion déjà fermée\r\n");
-            }
-            else
+            if (tcpClient != null && status == TCPstatus.CLIENT_CONNECTED)
             {
                 tcpClient.Close();
-                if (logger != null)
-                    logger.AppendText("Connexion fermée\r\n");
+                tcpClient = null;
+                status = TCPstatus.CLOSED;
+                LogMessage("Connexion fermée");
+                return true;
             }
-
             tcpClient = null;
-            status = TCPstatus.CLOSE;
-
-            return true;
+            status = TCPstatus.CLOSED;
+            return false;
         }
-
-        public bool sendData(byte[] load, TextBox logger = null)
+        public bool sendData(byte[] load)
         {
-            if(tcpClient == null || status != TCPstatus.CLIENT_CONNECTED)
+            if (tcpClient == null || status != TCPstatus.CLIENT_CONNECTED)
             {
-                if (logger != null)
-                    logger.AppendText("Connexion non établie\r\n");
+                LogMessage("Connexion non établie");
                 return false;
             }
-
             try
             {
                 NetworkStream stream = tcpClient.GetStream();
                 byte[] sizeInfo = BitConverter.GetBytes(load.Length);
                 stream.Write(sizeInfo, 0, sizeInfo.Length);
-
                 stream.Write(load, 0, load.Length);
-                if (logger != null)
-                    logger.AppendText($"Image envoyée : {load.Length} bytes\r\n");
-
+                LogMessage($"Image envoyée : {load.Length} bytes");
                 return true;
-
             }
             catch (Exception e)
             {
-                if (logger != null)
-                    logger.AppendText($"Erreur lors de l'envoi de l'image : {e.Message}\r\n");
+                LogMessage($"Erreur lors de l'envoi de l'image : {e.Message}");
                 return false;
             }
         }
-
-
-        async public Task<bool> sendDataOnce(byte[] load, TextBox logger = null)
+        async public Task<bool> sendDataOnce(byte[] load)
         {
             bool success = true;
-
-            success &= await openClient(logger);
-
-            if(success) 
-                success &= sendData(load, logger);
-
+            success &= await openClient();
             if (success)
-                success &= closeClient(logger);
+                success &= sendData(load);
+            if (success)
+                success &= closeClient();
             return success;
-
         }
-
-        async public Task<bool> sendImageOnce(Image img, TextBox logger = null)
+        async public Task<bool> sendImageOnce(Image img)
         {
             ImageConverter converter = new ImageConverter();
             byte[] imgBytes = (byte[])converter.ConvertTo(img, typeof(byte[]));
-            return await sendDataOnce(imgBytes, logger);
+            return await sendDataOnce(imgBytes);
         }
-
-        async public Task<bool> sendImageOnce(Bitmap bmp, TextBox logger = null)
+        async public Task<bool> sendImageOnce(Bitmap bmp)
         {
             ImageConverter converter = new ImageConverter();
             byte[] imgBytes = (byte[])converter.ConvertTo(bmp, typeof(byte[]));
-            return await sendDataOnce(imgBytes, logger);
+            return await sendDataOnce(imgBytes);
         }
-
-        async public Task<bool> openServer(TextBox logger = null)
+        private async Task SendClientKeepAliveAsync()
         {
-            if(status == TCPstatus.CLIENT_OPEN || status == TCPstatus.CLIENT_CONNECTED)
+            while (status == TCPstatus.CLIENT_CONNECTED && !_cts.Token.IsCancellationRequested)
             {
-                if (logger != null)
-                    logger.AppendText("Client déjà en cours d'exécution\r\n");
-                return false;
-            }   
+                try
+                {
+                    var keepAliveMessage = CreateMessage("KEEP_ALIVE");
+                    await tcpClient.GetStream().WriteAsync(keepAliveMessage, 0, keepAliveMessage.Length);
+                    LogMessage("Client sent Keep alive...");
+                    await Task.Delay(KeepAliveInterval);
+                    if ((DateTime.Now - _lastKeepAliveReceived).TotalMilliseconds > KeepAliveTimeout)
+                    {
+                        LogMessage("No keep-alive received.");
+                        if (status == TCPstatus.CLIENT_CONNECTED && !_cts.Token.IsCancellationRequested)
+                        {
+                            closeClient();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogMessage($"Failed to send keep-alive: {e.Message}");
+                    if (status == TCPstatus.CLIENT_CONNECTED && !_cts.Token.IsCancellationRequested)
+                    {
+                        closeClient();
+                    }
+                }
+            }
+        }
+        private async Task SendServerKeepAliveAsync(TcpClient client)
+        {
+            while (status == TCPstatus.SERVER_CONNECTED && !_cts.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    var keepAliveMessage = CreateMessage("KEEP_ALIVE");
+                    await client.GetStream().WriteAsync(keepAliveMessage, 0, keepAliveMessage.Length);
+                    LogMessage("Server sent Keep alive...");
+                    await Task.Delay(KeepAliveInterval);
+                    // Check for keep-alive timeout
+                    if ((DateTime.Now - _lastKeepAliveReceived).TotalMilliseconds > KeepAliveTimeout)
+                    {
+                        LogMessage("No keep-alive received.");
+                        if (status == TCPstatus.SERVER_CONNECTED && !_cts.Token.IsCancellationRequested)
+                        {
+                            closeServer();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogMessage($"Failed to send keep-alive from server: {e.Message}");
+                    if (status == TCPstatus.SERVER_CONNECTED && !_cts.Token.IsCancellationRequested)
+                    {
+                        closeServer();
 
-            if (tcpServer != null || status == TCPstatus.SERVER_OPEN || status == TCPstatus.SERVER_CONNECTED)
+                    }
+                }
+            }
+        }
+            
+        async public Task<bool> openServer()
+        {
+            if (status == TCPstatus.CLIENT_OPEN || status == TCPstatus.CLIENT_CONNECTED)
             {
-                if (logger != null)
-                    logger.AppendText("Serveur déjà en cours d'exécution\r\n");
+                LogMessage("Client déjà en cours d'exécution");
                 return false;
             }
-
-            tcpServer = new TcpListener(m_ipAdrServeur, m_numPort);
-            tcpServer.Start();
-            if (logger != null)
-                logger.AppendText("Serveur en cours d'exécution...\r\n");
-            status = TCPstatus.SERVER_OPEN;
-
-            try
+            if (tcpServer != null || status == TCPstatus.SERVER_CONNECTED)
             {
-                sock = await tcpServer.AcceptSocketAsync();
-                status = TCPstatus.SERVER_CONNECTED;
+                LogMessage("Serveur déjà en cours d'exécution");
+                return false;
             }
-            catch (Exception e)
+            lock (_lock)
             {
-                if (logger != null)
-                    logger.AppendText($"Erreur lors de l'acceptation de la connexion : {e.Message}\r\n");
+                status = TCPstatus.SERVER_OPEN;
+                tcpServer = new TcpListener(IPAddress.Any, m_numPort);
+                tcpServer.Start();
+                _cts = new CancellationTokenSource();
+            }
+            LogMessage("Serveur en cours d'exécution...");
+            while (status == TCPstatus.SERVER_OPEN)
+            {
+                try
+                {
+                    var client = await tcpServer.AcceptTcpClientAsync();
+                    lock (_lock) { status = TCPstatus.SERVER_CONNECTED; }
+                    LogMessage("Server connected to client.");
+                    _lastKeepAliveReceived = DateTime.Now;
+                    // Lancer l'envoi de keep-alive depuis le serveur
+                    _ = SendServerKeepAliveAsync(client);
+                    _ = receiveData(client);
+                }
+                catch (SocketException)
+                {
+                    await Task.Delay(1000); // Retry every second
+                }
+            }
+            return true;
+        }
+        public bool closeServer()
+        {
+            if (tcpServer != null && status == TCPstatus.SERVER_CONNECTED)
+            {
                 tcpServer.Stop();
+                status = TCPstatus.CLOSED;
                 tcpServer = null;
-                status = TCPstatus.CLOSE;
-                return false;
+                LogMessage("Connexion fermée");
+                return true;
             }
-
-            return true;
-        }
-
-        public bool closeServer(TextBox logger = null)
-        {
-            if(sock != null)
-            {
-                sock.Close();
-            }
-
-            if (tcpServer == null || status == TCPstatus.CLOSE || status == TCPstatus.UNKNOWN)
-            {
-                if (logger != null)
-                    logger.AppendText("Serveur déjà fermé\r\n");
-            }
-            else
-            {
-                if (logger != null)
-                    logger.AppendText("Serveur fermé\r\n");
-                tcpServer.Stop();
-            }
-            
+            status = TCPstatus.CLOSED;
             tcpServer = null;
-            status = TCPstatus.CLOSE;
-            
-            return true;
+            return false;
         }
-
-        public byte[] receiveData(TextBox logger = null)
+        private async Task ReceiveKeepAliveAsync()
+        {
+            if (tcpClient == null || status != TCPstatus.CLIENT_CONNECTED)
+            {
+                LogMessage("Client non connecté");
+            }
+            NetworkStream stream = tcpClient.GetStream();
+            byte[] sizeInfo = new byte[4];
+            while (status == TCPstatus.CLIENT_CONNECTED && !_cts.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    var byteCount = await stream.ReadAsync(sizeInfo, 0, sizeInfo.Length, _cts.Token);
+                    int dataSize = BitConverter.ToInt32(sizeInfo, 0);
+                    if (byteCount > 0 && dataSize > 0)
+                    {
+                        byte[] data = new byte[dataSize];
+                        byteCount = await stream.ReadAsync(data, 0, data.Length, _cts.Token);
+                        var message = Encoding.ASCII.GetString(data, 0, byteCount);
+                        if (message == "KEEP_ALIVE")
+                        {
+                            _lastKeepAliveReceived = DateTime.Now;
+                            LogMessage("Received keep alive from server.");
+                        }
+                    }
+                    else
+                    {
+                        LogMessage("Server disconnected.");
+                        if (status == TCPstatus.CLIENT_CONNECTED && !_cts.Token.IsCancellationRequested)
+                        {
+                            closeClient();
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogMessage($"Error receiving keep alive: {e.Message}");
+                    if (status == TCPstatus.CLIENT_CONNECTED && !_cts.Token.IsCancellationRequested)
+                    {
+                        closeClient();
+                    }
+                }
+            }
+        }
+        async public Task receiveData(TcpClient client)
         {
             if (tcpServer == null || status != TCPstatus.SERVER_CONNECTED)
             {
-                if (logger != null)
-                    logger.AppendText("Serveur non en cours d'exécution\r\n");
-                return null;
+                LogMessage("Serveur non en cours d'exécution");
             }
-            
-            if (sock == null)
+            if (tcpServer.Server == null)
             {
                 //closeServer();
-                if (logger != null)
-                    logger.AppendText("Aucune connexion acceptée\r\n");
-                return null;
+                LogMessage("Aucune connexion acceptée");
             }
-
-            if (logger != null)
-                logger.AppendText($"Connexion acceptée de {sock.RemoteEndPoint}\r\n");
-
-            NetworkStream stream = new NetworkStream(sock);
-
-            // Lire la taille des datas
+            
+            NetworkStream stream = client.GetStream();
             byte[] sizeInfo = new byte[4];
-            try
+            while (status == TCPstatus.SERVER_CONNECTED && !_cts.Token.IsCancellationRequested)
             {
-                stream.Read(sizeInfo, 0, sizeInfo.Length);
-            }
-            catch (Exception e)
-            {
-                if (logger != null)
-                    logger.AppendText($"Erreur lors de la lecture de la taille des données : {e.Message}\r\n");
-                return null;
-            }
+                try
+                {
+                    var byteCount = await stream.ReadAsync(sizeInfo, 0, sizeInfo.Length, _cts.Token);
+                    int dataSize = BitConverter.ToInt32(sizeInfo, 0);
+                    if (byteCount > 0 && dataSize > 0)
+                    {
+                        byte[] data = new byte[dataSize];
+                        byteCount = await stream.ReadAsync(data, 0, data.Length, _cts.Token);
+                        var message = Encoding.ASCII.GetString(data, 0, byteCount);
+                        if (message == "KEEP_ALIVE")
+                        {
+                            _lastKeepAliveReceived = DateTime.Now;
+                            LogMessage("Received keep alive from client.");
+                            // Envoyer un keep-alive en réponse
+                            //var keepAliveResponse = Encoding.ASCII.GetBytes("KEEP_ALIVE");
+                            //await stream.WriteAsync(keepAliveResponse, 0, keepAliveResponse.Length);
+                        }
+                        else
+                        {
+                            LogMessage("Received message");
+                            using (var ms = new MemoryStream(data))
+                            {
+                                Image img = Image.FromStream(ms);
+                                OnImageReceived?.Invoke(img); // Déclencher l'événement
+                            }
+                        }
+                    }
+                    else
+                    {
+                        LogMessage("Client disconnected.");
+                        if (status == TCPstatus.SERVER_CONNECTED && !_cts.Token.IsCancellationRequested)
 
-            int dataSize = BitConverter.ToInt32(sizeInfo, 0);
+                            closeClient();
+                    }
+                }
 
-            byte[] data = new byte[dataSize];
-            try
-            {
-                stream.Read(data, 0, data.Length);
+                catch (Exception e)
+                {
+                    LogMessage($"Error receiving keep alive: {e.Message}");
+                    if (status == TCPstatus.CLIENT_CONNECTED && !_cts.Token.IsCancellationRequested)
+                    {
+                        closeClient();
+                    }
+                }
             }
-            catch (Exception e)
-            {
-                if (logger != null)
-                    logger.AppendText($"Erreur lors de la lecture des données : {e.Message}\r\n");
-                return null;
-            }   
-
-            return data;
         }
-
-        async public Task<byte[]> receiveDataOnce(TextBox logger = null)
+        public byte[] CreateMessage(string message)
         {
-            await openServer(logger);
-
-            byte[] data = receiveData(logger);
-
-            closeServer(logger);
-
-            return data;
+            int size = message.Length;
+            byte[] sizeInfo = BitConverter.GetBytes(size);
+            byte[] keepAliveMessage = sizeInfo.Concat(Encoding.ASCII.GetBytes(message)).ToArray();
+            return keepAliveMessage;
         }
-
     }
 }

@@ -797,8 +797,8 @@ CImageNdg CImageClasse::toNdg(const std::string& methode)
     }
     else if (methode.compare("expansion") == 0)
     {
-        int min = ULONG_MAX;
-        int max = 0;
+        unsigned min = ULONG_MAX;
+        unsigned int max = 0;
 
         for (int i = 0; i < this->lireNbPixels(); i++)
         {
@@ -1406,7 +1406,7 @@ std::vector<SIGNATURE_Forme> CImageClasse::sigComposantesConnexes(bool enregistr
             }
             // Avec perimetre et surface :
             // compacité = perimetre^2 / 4 * pi * surface
-            tab[num].compacite = (tab[num].perimetre * tab[num].perimetre) / (4 * PI * tab[num].surface);
+            tab[num].compacite = float((tab[num].perimetre * tab[num].perimetre) / (4 * PI * tab[num].surface));
         }
 
          
@@ -1763,9 +1763,9 @@ std::vector<SIGNATURE_Cellule> CImageClasse::sigCellules(const CImageNdg & img, 
             ndgObj[k] = (sObj[k] > 0) ? ndgObj[k] / sObj[k] : 0;
             ndgFond[k] = (sCell[k] > 0) ? ndgFond[k] / sCell[k] : 0;
 
-            tab[k].emergence = ndgObj[k] - ndgFond[k];
+            tab[k].emergence = (double)(ndgObj[k] - ndgFond[k]);
             tab[k].occupation = (sCell[k] > 0) ? (double)sObj[k] / (sCell[k]) : 0;
-            tab[k].surface = sObj[k];
+            tab[k].surface = (int)sObj[k];
         }
 
         if (enregistrementCSV)
@@ -1805,8 +1805,8 @@ void CImageClasse::traceACP(const std::vector<SIGNATURE_Forme> & tab)
             {
                 if (this->operator()(i, j) == static_cast<unsigned long>(num))
                 {
-                    int y1 = coefDir1 * i + ordOrigine1;
-                    int y2 = coefDir2 * i + ordOrigine2;
+                    int y1 = int(coefDir1 * i + ordOrigine1);
+                    int y2 = int(coefDir2 * i + ordOrigine2);
                     if ((y1 == j) || (y2 == j))
                     {
                         this->operator()(i, j) = 0;
@@ -1820,8 +1820,8 @@ void CImageClasse::traceACP(const std::vector<SIGNATURE_Forme> & tab)
             {
                 if (this->operator()(i, j) == static_cast<unsigned long>(num) && this->operator()(i, j) != 0)
                 {
-                    int x1 = (j - ordOrigine1) / coefDir1;
-                    int x2 = (j - ordOrigine2) / coefDir2;
+                    int x1 = int((j - ordOrigine1) / coefDir1);
+                    int x2 = int((j - ordOrigine2) / coefDir2);
                     if ((x1 == i) || (x2 == i))
                     {
                         this->operator()(i, j) = 0;
@@ -1882,8 +1882,8 @@ void CImageClasse::tracerCercle(int cx, int cy, int rayon, int couleur)
 
     for (double a = 0; a < 2 * PI; a += pas_angle)
     {
-        int x = cx + rayon * cos(a);
-        int y = cy + rayon * sin(a);
+        int x = int(cx + rayon * cos(a));
+        int y = int(cy + rayon * sin(a));
 
         if (x >= 0 && x < this->m_iHauteur && y >= 0 && y < this->m_iLargeur)
             this->operator()(x, y) = couleur;
@@ -1927,8 +1927,8 @@ _EXPORT_ double CImageClasse::Vinet(const CImageClasse& ref) {
         // Recherche du plus proche composant
         int minIndex = 1;
         int minDist = INT_MAX;
-        for (int j = 1; j < loc_sig.size(); j++) {
-            int dist = pow(loc_sig[j].centreGravite_i - ref_sig[i].centreGravite_i, 2) + pow(loc_sig[j].centreGravite_j - ref_sig[i].centreGravite_j, 2);
+        for (unsigned int j = 1; j < loc_sig.size(); j++) {
+            int dist = int(pow(loc_sig[j].centreGravite_i - ref_sig[i].centreGravite_i, 2) + pow(loc_sig[j].centreGravite_j - ref_sig[i].centreGravite_j, 2));
             if (dist < minDist) {
                 minDist = dist;
                 minIndex = j;
@@ -1951,7 +1951,7 @@ _EXPORT_ double CImageClasse::Vinet(const CImageClasse& ref) {
     }
 
     // On ajoute les surfaces des composantes connexes manquées (on penalise la sous-detection)
-    for (int i = min_nb; i < ref_sig.size(); i++) {
+    for (unsigned int i = min_nb; i < ref_sig.size(); i++) {
         surface += ref_sig[i].surface;
     }
 

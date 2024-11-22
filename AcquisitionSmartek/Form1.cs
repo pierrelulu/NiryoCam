@@ -6,7 +6,7 @@ using System.Net;
 using System.Windows.Forms;
 using System.Threading;
 using System.Threading.Tasks;
-using libImage;
+//using libImage;
 using TcpIp;
 
 namespace AcquisitionSmartek
@@ -18,19 +18,22 @@ namespace AcquisitionSmartek
         PixelFormat m_pixelFormat;
         UInt32 m_pixelType;
         TCP tcp;
-        TCPstatus camStatus = TCPstatus.CLOSE;
+        TCPstatus camStatus = TCPstatus.CLOSED;
 
         public Form1()
         {
             InitializeComponent();
-            tcp = new TCP(client: IPAddress.Loopback, server: IPAddress.Loopback, port: 8001);
+            tcp = new TCP(client: IPAddress.Loopback, server: getIP(), port: 8001);
 
             Thread backgroundThread = new Thread(UpdateLabelsInBackground);
             backgroundThread.IsBackground = true;
             backgroundThread.Start();
         }
 
-        // ...
+        private IPAddress getIP()
+        {
+            return new IPAddress(new byte[] { byte.Parse(ip1.Text), byte.Parse(ip2.Text), byte.Parse(ip3.Text), byte.Parse(ip4.Text) });
+        }
 
         async private void boutInit_Click(object sender, EventArgs e)
         {
@@ -88,7 +91,7 @@ namespace AcquisitionSmartek
 
             if (camStatus != TCPstatus.CLIENT_CONNECTED)
             {
-                camStatus = TCPstatus.CLOSE;
+                camStatus = TCPstatus.CLOSED;
             }
         }
 
@@ -136,8 +139,8 @@ namespace AcquisitionSmartek
                         
                         if (bitmap != null)
                         {
-                            ClImage Img = ClImage.traiter(bitmap);
-                            bitmap = (Bitmap)Img.result;
+                            //ClImage Img = ClImage.traiter(bitmap);
+                            //bitmap = (Bitmap)Img.result;
                             //this.pbImage.Height = bitmap.Height;
                             //this.pbImage.Width = bitmap.Width;
                             if (tcp.Status() == TCPstatus.CLIENT_CONNECTED) {
@@ -176,7 +179,8 @@ namespace AcquisitionSmartek
 
         private void changeCOMstatus(Label stateLabel, TCPstatus status, Label ipLabel, string ip)
         {
-            ipLabel.Text = "Adresse IP : " + ip;
+            if(ipLabel != null)
+                ipLabel.Text = "Adresse IP : " + ip;
             switch (status)
             {
                 case TCPstatus.CLIENT_OPEN:
@@ -189,7 +193,7 @@ namespace AcquisitionSmartek
                     stateLabel.Text = "Connecté";
                     break;
 
-                case TCPstatus.CLOSE:
+                case TCPstatus.CLOSED:
                     stateLabel.BackColor = Color.Orange;
                     stateLabel.Text = "Déconnecté";
                     break;
@@ -203,7 +207,7 @@ namespace AcquisitionSmartek
 
         public void changeTCPstatus()
         {
-            changeCOMstatus(this.labelComTcp, tcp.Status(), this.labelIPtrait, tcp.getServer().ToString());
+            changeCOMstatus(this.labelComTcp, tcp.Status(), null, tcp.getServer().ToString());
         }
 
         public void changeCAMstatus()
@@ -237,8 +241,8 @@ namespace AcquisitionSmartek
 
         async private void initComImage_Click(object sender, EventArgs e)
         {
-            await tcp.openClient(tcpLogger);
-            changeTCPstatus();
+            tcp.changeClient(getIP());
+            await tcp.openClient();
         }
     }
 }

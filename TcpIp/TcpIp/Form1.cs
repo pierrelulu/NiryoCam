@@ -23,16 +23,13 @@ namespace TcpIp
 
         async private void boutClient_Click(object sender, System.EventArgs e)
         {
-            // Charger l'image depuis un fichier
-            string imagePath = "C:\\Users\\loris\\Downloads\\2225070_logo.png"; //"C:/Users/luttm/Documents/Devoirs/FISA3/Application Csharp/NiryoCam/TcpIp/image_test.png"; // Remplacez par le chemin de votre image
-            byte[] imageBytes = File.ReadAllBytes(imagePath);
-
-            await tcp.sendDataOnce(imageBytes, this.tbCom);
+            await tcp.openClient();
         }
 
         async private void boutServeur_Click(object sender, System.EventArgs e)
         {
-            byte[] imageBytes = await tcp.receiveDataOnce(this.tbCom);
+            await tcp.openServer();
+            byte[] imageBytes = null; //await tcp.receiveDataOnce(this.tbCom);
             Image received_image = null;
             try
             {
@@ -61,6 +58,25 @@ namespace TcpIp
         private void boutQuit_Click(object sender, System.EventArgs e)
         {
             this.Close();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            // Charger l'image depuis un fichier
+            string imagePath = "C:\\Users\\loris\\Downloads\\2225070_logo.png"; //"C:/Users/luttm/Documents/Devoirs/FISA3/Application Csharp/NiryoCam/TcpIp/image_test.png"; // Remplacez par le chemin de votre image
+            byte[] imageBytes = File.ReadAllBytes(imagePath);
+
+            tcp.sendData(imageBytes);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            tcp.closeClient();
+        }
+
+        private void closerServer_Click(object sender, EventArgs e)
+        {
+            tcp.closeServer();
         }
     }
 }

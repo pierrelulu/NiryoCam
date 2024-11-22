@@ -40,14 +40,18 @@
             this.lblNomCamera = new System.Windows.Forms.Label();
             this.lblIPcam = new System.Windows.Forms.Label();
             this.boutStop = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.labelIPtrait = new System.Windows.Forms.Label();
-            this.labelComTcp = new System.Windows.Forms.Label();
-            this.initComImage = new System.Windows.Forms.Button();
             this.tcpLogger = new System.Windows.Forms.TextBox();
+            this.initComImage = new System.Windows.Forms.Button();
+            this.labelComTcp = new System.Windows.Forms.Label();
+            this.tcpgroup = new System.Windows.Forms.GroupBox();
+            this.ip4 = new System.Windows.Forms.TextBox();
+            this.ip3 = new System.Windows.Forms.TextBox();
+            this.ip1 = new System.Windows.Forms.TextBox();
+            this.ip2 = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pbImage)).BeginInit();
             this.gbCamera.SuspendLayout();
-            this.groupBox1.SuspendLayout();
+            this.tcpgroup.SuspendLayout();
             this.SuspendLayout();
             // 
             // pnlImage
@@ -160,42 +164,18 @@
             this.boutStop.UseVisualStyleBackColor = true;
             this.boutStop.Click += new System.EventHandler(this.boutStop_Click);
             // 
-            // groupBox1
+            // tcpLogger
             // 
-            this.groupBox1.Controls.Add(this.tcpLogger);
-            this.groupBox1.Controls.Add(this.initComImage);
-            this.groupBox1.Controls.Add(this.labelIPtrait);
-            this.groupBox1.Controls.Add(this.labelComTcp);
-            this.groupBox1.Location = new System.Drawing.Point(12, 146);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(280, 108);
-            this.groupBox1.TabIndex = 8;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Poste Traitement";
-            // 
-            // labelIPtrait
-            // 
-            this.labelIPtrait.AutoSize = true;
-            this.labelIPtrait.BackColor = System.Drawing.SystemColors.Control;
-            this.labelIPtrait.Location = new System.Drawing.Point(11, 47);
-            this.labelIPtrait.Name = "labelIPtrait";
-            this.labelIPtrait.Size = new System.Drawing.Size(100, 13);
-            this.labelIPtrait.TabIndex = 6;
-            this.labelIPtrait.Text = "Adresse IP : 0.0.0.0";
-            // 
-            // labelComTcp
-            // 
-            this.labelComTcp.AutoSize = true;
-            this.labelComTcp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
-            this.labelComTcp.Location = new System.Drawing.Point(11, 21);
-            this.labelComTcp.Name = "labelComTcp";
-            this.labelComTcp.Size = new System.Drawing.Size(76, 13);
-            this.labelComTcp.TabIndex = 4;
-            this.labelComTcp.Text = "Non Connecté";
+            this.tcpLogger.AcceptsReturn = true;
+            this.tcpLogger.Location = new System.Drawing.Point(6, 84);
+            this.tcpLogger.Multiline = true;
+            this.tcpLogger.Name = "tcpLogger";
+            this.tcpLogger.Size = new System.Drawing.Size(267, 71);
+            this.tcpLogger.TabIndex = 8;
             // 
             // initComImage
             // 
-            this.initComImage.Location = new System.Drawing.Point(176, 16);
+            this.initComImage.Location = new System.Drawing.Point(198, 15);
             this.initComImage.Name = "initComImage";
             this.initComImage.Size = new System.Drawing.Size(75, 23);
             this.initComImage.TabIndex = 7;
@@ -203,12 +183,85 @@
             this.initComImage.UseVisualStyleBackColor = true;
             this.initComImage.Click += new System.EventHandler(this.initComImage_Click);
             // 
-            // tcpLogger
+            // labelComTcp
             // 
-            this.tcpLogger.Location = new System.Drawing.Point(7, 64);
-            this.tcpLogger.Name = "tcpLogger";
-            this.tcpLogger.Size = new System.Drawing.Size(251, 20);
-            this.tcpLogger.TabIndex = 8;
+            this.labelComTcp.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.labelComTcp.Location = new System.Drawing.Point(6, 42);
+            this.labelComTcp.Name = "labelComTcp";
+            this.labelComTcp.Size = new System.Drawing.Size(267, 33);
+            this.labelComTcp.TabIndex = 4;
+            this.labelComTcp.Text = "Non Connecté";
+            this.labelComTcp.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // tcpgroup
+            // 
+            this.tcpgroup.Controls.Add(this.tcpLogger);
+            this.tcpgroup.Controls.Add(this.initComImage);
+            this.tcpgroup.Controls.Add(this.ip4);
+            this.tcpgroup.Controls.Add(this.labelComTcp);
+            this.tcpgroup.Controls.Add(this.ip3);
+            this.tcpgroup.Controls.Add(this.ip1);
+            this.tcpgroup.Controls.Add(this.ip2);
+            this.tcpgroup.Controls.Add(this.label1);
+            this.tcpgroup.Location = new System.Drawing.Point(13, 126);
+            this.tcpgroup.Name = "tcpgroup";
+            this.tcpgroup.Size = new System.Drawing.Size(279, 161);
+            this.tcpgroup.TabIndex = 9;
+            this.tcpgroup.TabStop = false;
+            this.tcpgroup.Text = "TCP Connection";
+            // 
+            // ip4
+            // 
+            this.ip4.Location = new System.Drawing.Point(138, 18);
+            this.ip4.MaxLength = 3;
+            this.ip4.Name = "ip4";
+            this.ip4.Size = new System.Drawing.Size(30, 20);
+            this.ip4.TabIndex = 3;
+            this.ip4.Text = "1";
+            this.ip4.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.ip4.WordWrap = false;
+            // 
+            // ip3
+            // 
+            this.ip3.Location = new System.Drawing.Point(102, 18);
+            this.ip3.MaxLength = 3;
+            this.ip3.Name = "ip3";
+            this.ip3.Size = new System.Drawing.Size(30, 20);
+            this.ip3.TabIndex = 2;
+            this.ip3.Text = "0";
+            this.ip3.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.ip3.WordWrap = false;
+            // 
+            // ip1
+            // 
+            this.ip1.Location = new System.Drawing.Point(30, 18);
+            this.ip1.MaxLength = 3;
+            this.ip1.Name = "ip1";
+            this.ip1.Size = new System.Drawing.Size(30, 20);
+            this.ip1.TabIndex = 0;
+            this.ip1.Text = "127";
+            this.ip1.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.ip1.WordWrap = false;
+            // 
+            // ip2
+            // 
+            this.ip2.Location = new System.Drawing.Point(66, 18);
+            this.ip2.MaxLength = 3;
+            this.ip2.Name = "ip2";
+            this.ip2.Size = new System.Drawing.Size(30, 20);
+            this.ip2.TabIndex = 1;
+            this.ip2.Text = "0";
+            this.ip2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.ip2.WordWrap = false;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(6, 21);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(134, 13);
+            this.label1.TabIndex = 4;
+            this.label1.Text = "IP:             .           .           .";
             // 
             // Form1
             // 
@@ -216,7 +269,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(804, 466);
             this.ControlBox = false;
-            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.tcpgroup);
             this.Controls.Add(this.pbImage);
             this.Controls.Add(this.boutStop);
             this.Controls.Add(this.gbCamera);
@@ -228,8 +281,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.pbImage)).EndInit();
             this.gbCamera.ResumeLayout(false);
             this.gbCamera.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.tcpgroup.ResumeLayout(false);
+            this.tcpgroup.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -247,11 +300,15 @@
         private System.Windows.Forms.Label lblNomCamera;
         private System.Windows.Forms.Label lblIPcam;
         private System.Windows.Forms.Button boutStop;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.Label labelIPtrait;
         private System.Windows.Forms.Label labelComTcp;
         private System.Windows.Forms.Button initComImage;
         private System.Windows.Forms.TextBox tcpLogger;
+        private System.Windows.Forms.GroupBox tcpgroup;
+        private System.Windows.Forms.TextBox ip4;
+        private System.Windows.Forms.TextBox ip3;
+        private System.Windows.Forms.TextBox ip1;
+        private System.Windows.Forms.TextBox ip2;
+        private System.Windows.Forms.Label label1;
     }
 }
 
