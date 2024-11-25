@@ -10,95 +10,73 @@ namespace TcpIp
 {
     public partial class Form1 : Form
     {
-
-        private IPAddress m_ipAdrServeur;
-        private IPAddress m_ipAdrClient;
-        private int m_numPort;
+        private TCP tcp;
 
         public Form1()
         {
             InitializeComponent();
 
-            m_ipAdrServeur = IPAddress.Parse("127.0.0.1");  // Adresse locale
-            m_ipAdrClient = IPAddress.Parse("127.0.0.1");   // Adresse distante
-            m_numPort = 8001;
+
+                            // Adresse distante             // Adresse locale      // Port
+            tcp = new TCP(IPAddress.Parse("127.0.0.1"), IPAddress.Parse("127.0.0.1"), 8001);
         }
 
-        public static void sendData(IPAddress client, int port, byte[] load, TextBox logger = null)
+        async private void boutClient_Click(object sender, System.EventArgs e)
         {
-            TcpClient tcpClient = new TcpClient();
-            if (logger != null)
-                logger.AppendText("Connexion en cours...\r\n");
-
-            tcpClient.Connect(client, port);
-            if (logger != null)
-                logger.AppendText("Connexion établie\r\n");
-
-            NetworkStream stream = tcpClient.GetStream();
-            byte[] sizeInfo = BitConverter.GetBytes(load.Length);
-            stream.Write(sizeInfo, 0, sizeInfo.Length);
-
-            stream.Write(load, 0, load.Length);
-            if (logger != null)
-                logger.AppendText($"Image envoyée : {load.Length} bytes\r\n");
-
-            tcpClient.Close();
-
+            await tcp.openClient();
         }
 
-        public static byte[] receiveData(IPAddress server, int port, TextBox logger = null)
+        async private void boutServeur_Click(object sender, System.EventArgs e)
         {
-            TcpListener tcpList = new TcpListener(server, port);
-            tcpList.Start();
-            if (logger != null)
-                logger.AppendText("Serveur en cours d'exécution...\r\n");
+            await tcp.openServer();
+            byte[] imageBytes = null; //await tcp.receiveDataOnce(this.tbCom);
+            Image received_image = null;
+            try
+            {
+                if (imageBytes != null)
+                {
+                    received_image = Image.FromStream(new MemoryStream(imageBytes));
+                    // Sauvegarder l'image reçue
+                    string outputPath = "received_image.png"; // Chemin de sauvegarde
+                    File.WriteAllBytes(outputPath, imageBytes);
+                    this.tbCom.AppendText($"Image reçue et sauvegardée : {outputPath}\r\n");
+                }
+                else
+                {
+                    this.tbCom.AppendText($"Aucune image reçue\r\n");
+                }
+            }
+            catch (Exception ex)
+            {
+                this.tbCom.AppendText($"Erreur lors de la conversion de l'image : {ex.Message}\r\n");
+                return;
+            }
 
-            Socket sock = tcpList.AcceptSocket();
-            if (logger != null)
-                logger.AppendText($"Connexion acceptée de {sock.RemoteEndPoint}\r\n");
-
-            NetworkStream stream = new NetworkStream(sock);
-
-            // Lire la taille des datas
-            byte[] sizeInfo = new byte[4];
-            stream.Read(sizeInfo, 0, sizeInfo.Length);
-            int dataSize = BitConverter.ToInt32(sizeInfo, 0);
-
-
-            byte[] data = new byte[dataSize];
-            stream.Read(data, 0, data.Length);
-
-            tcpList.Stop();
-            sock.Close();
-
-            return data;
-        }
-
-        private void boutClient_Click(object sender, System.EventArgs e)
-        {
-            // Charger l'image depuis un fichier
-            string imagePath = "C:\\Users\\loris\\Downloads\\2225070_logo.png"; //"C:/Users/luttm/Documents/Devoirs/FISA3/Application Csharp/NiryoCam/TcpIp/image_test.png"; // Remplacez par le chemin de votre image
-            byte[] imageBytes = File.ReadAllBytes(imagePath);
-
-            sendData(m_ipAdrClient, m_numPort, imageBytes, this.tbCom);
-        }
-
-        private void boutServeur_Click(object sender, System.EventArgs e)
-        {
-            byte[] imageBytes = receiveData(m_ipAdrServeur, m_numPort, this.tbCom);
-            
-            Image received_image = Image.FromStream(new MemoryStream(imageBytes));
-
-            // Sauvegarder l'image reçue
-            string outputPath = "received_image.png"; // Chemin de sauvegarde
-            File.WriteAllBytes(outputPath, imageBytes);
-            this.tbCom.AppendText($"Image reçue et sauvegardée : {outputPath}\r\n");
 
         }
 
         private void boutQuit_Click(object sender, System.EventArgs e)
         {
             this.Close();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            // Charger l'image depuis un fichier
+            string imagePath = "C:\\Users\\loris\\Downloads\\2225070_logo.png"; //"C:/Users/luttm/Documents/Devoirs/FISA3/Application Csharp/NiryoCam/TcpIp/image_test.png"; // Remplacez par le chemin de votre image
+            byte[] imageBytes = File.ReadAllBytes(imagePath);
+
+            tcp.sendData(imageBytes);
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            tcp.closeClient();
+        }
+
+        private void closerServer_Click(object sender, EventArgs e)
+        {
+            tcp.closeServer();
         }
     }
 }
