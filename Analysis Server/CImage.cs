@@ -77,7 +77,7 @@ namespace libImage
             return valeurChamp(ClPtr, i);
         }
 
-        public static ClImage traiter(Image img)
+        async public static Task<ClImage> traiter(Image img)
         {
             ClImage Img = new ClImage();
 
@@ -88,14 +88,20 @@ namespace libImage
             
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-            unsafe
+
+            await Task.Run(() =>
             {
-                BitmapData sourceBMPData = sourceBMP.LockBits(new Rectangle(0, 0, sourceBMP.Width, sourceBMP.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
-                Img.objetLibDataImgPtr(0, sourceBMPData.Scan0, sourceBMPData.Stride, sourceBMP.Height, sourceBMP.Width);
-                // 1 champ texte retour C++, le seuil auto
-                sourceBMP.UnlockBits(sourceBMPData);
-                Img.freeObjetLibDataPtr();
-            }
+                unsafe
+                {
+                    BitmapData sourceBMPData = sourceBMP.LockBits(new Rectangle(0, 0, sourceBMP.Width, sourceBMP.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+                    Img.objetLibDataImgPtr(0, sourceBMPData.Scan0, sourceBMPData.Stride, sourceBMP.Height, sourceBMP.Width);
+                    // 1 champ texte retour C++, le seuil auto
+                    sourceBMP.UnlockBits(sourceBMPData);
+                    Img.freeObjetLibDataPtr();
+                }
+            });
+
+            
             stopwatch.Stop();
             TimeSpan elapsedTime = stopwatch.Elapsed;
 

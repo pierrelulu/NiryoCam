@@ -144,7 +144,7 @@ namespace AcquisitionSmartek
                             //this.pbImage.Height = bitmap.Height;
                             //this.pbImage.Width = bitmap.Width;
                             if (tcp.Status() == TCPstatus.CLIENT_CONNECTED) {
-                                await tcp.sendImageOnce(bitmap); 
+                                tcp.sendImageOnce(bitmap);
                             }
                             this.pbImage.Image = bitmap;
                         }
@@ -243,6 +243,11 @@ namespace AcquisitionSmartek
         {
             tcp.changeClient(getIP());
             await tcp.openClient();
+        }
+
+        private void pbImage_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

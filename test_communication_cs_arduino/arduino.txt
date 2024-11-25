@@ -1,0 +1,12 @@
+void setup() {
+  Serial.begin(9600); // Doit correspondre au baud rate utilisé dans le programme C#
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    int receivedValue = Serial.parseInt();
+    Serial.print("Valeur reçue : ");
+    Serial.println(receivedValue);
+    // Faites quelque chose avec la valeur reçue
+  }
+}

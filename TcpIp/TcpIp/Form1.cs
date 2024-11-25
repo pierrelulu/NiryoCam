@@ -63,7 +63,7 @@ namespace TcpIp
         private void button2_Click(object sender, EventArgs e)
         {
             // Charger l'image depuis un fichier
-            string imagePath = "C:\\Users\\loris\\Downloads\\2225070_logo.png"; //"C:/Users/luttm/Documents/Devoirs/FISA3/Application Csharp/NiryoCam/TcpIp/image_test.png"; // Remplacez par le chemin de votre image
+            string imagePath = "C:/Users/luttm/Documents/Devoirs/FISA3/Application Csharp/NiryoCam/TcpIp/image_test.png"; //"C:/Users/luttm/Documents/Devoirs/FISA3/Application Csharp/NiryoCam/TcpIp/image_test.png"; // Remplacez par le chemin de votre image
             byte[] imageBytes = File.ReadAllBytes(imagePath);
 
             tcp.sendData(imageBytes);

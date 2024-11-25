@@ -75,6 +75,7 @@
             this.pbImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pbImage.TabIndex = 0;
             this.pbImage.TabStop = false;
+            this.pbImage.Click += new System.EventHandler(this.pbImage_Click);
             // 
             // boutInit
             // 
@@ -108,7 +109,7 @@
             // 
             // timAcq
             // 
-            this.timAcq.Interval = 20;
+            this.timAcq.Interval = 500;
             this.timAcq.Tick += new System.EventHandler(this.timAcq_Tick);
             // 
             // lblComCam

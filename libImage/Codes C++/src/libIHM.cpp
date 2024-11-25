@@ -47,9 +47,9 @@ ClibIHM::ClibIHM(int nbChamps, byte* data, int stride, int nbLig, int nbCol){
 		pixPtr += stride; // largeur une seule ligne gestion multiple 32 bits
 		//refPtr += stride;
 	}
-	return;
 
 	out = this->imgPt->plan().morphologie("median", elemStruct::croix(5));
+	//out = this->imgPt->plan().seuillage("otsu");
 	//CImageNdg ref = refC.plan();
 
 	// TRAITEMENT

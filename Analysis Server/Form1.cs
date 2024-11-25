@@ -120,7 +120,7 @@ namespace Analysis_Server
             await tcp.openServer();
         }
 
-        private void DisplayImageInPictureBox(Image img)
+        async private void DisplayImageInPictureBox(Image img)
         {
             if (pictureBox1.InvokeRequired)
             {
@@ -129,9 +129,14 @@ namespace Analysis_Server
             else
             {
                 pictureBox1.Image = img;
-                imageAnalysis = ClImage.traiter(img);
+                imageAnalysis = await ClImage.traiter(img);
                 pictureBox2.Image = imageAnalysis.result;
             }
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

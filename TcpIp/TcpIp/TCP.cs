@@ -201,11 +201,12 @@ namespace TcpIp
             byte[] imgBytes = (byte[])converter.ConvertTo(img, typeof(byte[]));
             return await sendDataOnce(imgBytes);
         }
-        async public Task<bool> sendImageOnce(Bitmap bmp)
+        public bool sendImageOnce(Bitmap bmp)
         {
             ImageConverter converter = new ImageConverter();
             byte[] imgBytes = (byte[])converter.ConvertTo(bmp, typeof(byte[]));
-            return await sendDataOnce(imgBytes);
+            //return await sendDataOnce(imgBytes);
+            return sendData(imgBytes);
         }
         private async Task SendClientKeepAliveAsync()
         {
