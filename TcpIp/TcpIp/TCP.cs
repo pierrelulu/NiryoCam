@@ -327,6 +327,7 @@ namespace TcpIp
             tcpServer = null;
             return false;
         }
+
         private async Task ReceiveKeepAliveAsync()
         {
             if (tcpClient == null || status != TCPstatus.CLIENT_CONNECTED)
@@ -363,11 +364,8 @@ namespace TcpIp
                 }
                 catch (Exception e)
                 {
-                    LogMessage($"Error receiving keep alive: {e.Message}");
-                    if (status == TCPstatus.CLIENT_CONNECTED && !_cts.Token.IsCancellationRequested)
-                    {
-                        closeClient();
-                    }
+                    LogMessage($"Error receiving keep alive: {e.Message} (Status : {status})");
+                    closeClient();
                 }
             }
         }
@@ -425,11 +423,8 @@ namespace TcpIp
 
                 catch (Exception e)
                 {
-                    LogMessage($"Error receiving keep alive: {e.Message}");
-                    if (status == TCPstatus.CLIENT_CONNECTED && !_cts.Token.IsCancellationRequested)
-                    {
-                        closeClient();
-                    }
+                    LogMessage($"Error receiving keep alive: {e.Message} (Status : {status})");
+                    closeClient();
                 }
             }
         }

@@ -155,7 +155,7 @@ namespace AcquisitionSmartek
                             //this.pbImage.Height = bitmap.Height;
                             //this.pbImage.Width = bitmap.Width;
                             if (tcp.Status() == TCPstatus.CLIENT_CONNECTED) {
-                                //tcp.sendImageOnce(bitmap);
+                                await tcp.sendImageOnce(bitmap);
                             }
                             this.pbImage.Image = bitmap;
                         }
@@ -227,7 +227,8 @@ namespace AcquisitionSmartek
             if(camStatus == TCPstatus.CLIENT_CONNECTED && (m_device == null || !m_device.IsConnected()) )
             {
                 camStatus = TCPstatus.UNKNOWN;
-                gige.GigEVisionSDK.ExitGigEVisionAPI();
+                //gige.GigEVisionSDK.ExitGigEVisionAPI();
+                boutInit_Click(null, null);
 
             }
             if (m_device != null)
@@ -260,15 +261,23 @@ namespace AcquisitionSmartek
         {
             while (true)
             {
-                if (this.IsHandleCreated)
+                try
                 {
-                    this.Invoke((MethodInvoker)delegate
+                    if (this.IsHandleCreated)
                     {
-                        // Code de modification des éléments graphiques ici
-                        changeTCPstatus();
-                        changeCAMstatus();
-                        changeSerialStatus();
-                    });
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            // Code de modification des éléments graphiques ici
+                            changeTCPstatus();
+                            changeCAMstatus();
+                            changeSerialStatus();
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log exception and handle it appropriately
+                    Console.WriteLine("Error: " + ex.Message);
                 }
                 Thread.Sleep(100); // Attendez 0.1 seconde
             }
