@@ -6,8 +6,10 @@ using System.Net;
 using System.Windows.Forms;
 using System.Threading;
 using System.Threading.Tasks;
+using System.IO.Ports;
 //using libImage;
 using TcpIp;
+using Serial;
 
 namespace AcquisitionSmartek
 {
@@ -18,12 +20,16 @@ namespace AcquisitionSmartek
         PixelFormat m_pixelFormat;
         UInt32 m_pixelType;
         TCP tcp;
+        SerialCOM Serial;
         TCPstatus camStatus = TCPstatus.CLOSED;
 
         public Form1()
         {
             InitializeComponent();
-            tcp = new TCP(client: IPAddress.Loopback, server: getIP(), port: 8001);
+            tcp = new TCP(client: IPAddress.Loopback, server: getIP(), port: 8001, logger: tcpLogger);
+            Serial = new SerialCOM(getCOMport(), serialLogger);
+
+            Serial.OnInfoReceived += autoResponse;
 
             Thread backgroundThread = new Thread(UpdateLabelsInBackground);
             backgroundThread.IsBackground = true;
@@ -33,6 +39,11 @@ namespace AcquisitionSmartek
         private IPAddress getIP()
         {
             return new IPAddress(new byte[] { byte.Parse(ip1.Text), byte.Parse(ip2.Text), byte.Parse(ip3.Text), byte.Parse(ip4.Text) });
+        }
+
+        private string getCOMport()
+        {
+            return "COM" + nCOM.Text;
         }
 
         async private void boutInit_Click(object sender, EventArgs e)
@@ -144,7 +155,7 @@ namespace AcquisitionSmartek
                             //this.pbImage.Height = bitmap.Height;
                             //this.pbImage.Width = bitmap.Width;
                             if (tcp.Status() == TCPstatus.CLIENT_CONNECTED) {
-                                tcp.sendImageOnce(bitmap);
+                                //tcp.sendImageOnce(bitmap);
                             }
                             this.pbImage.Image = bitmap;
                         }
@@ -219,22 +230,46 @@ namespace AcquisitionSmartek
                 gige.GigEVisionSDK.ExitGigEVisionAPI();
 
             }
-            if (m_device != null && m_device.IsConnected())
-            { 
-                camStatus = TCPstatus.CLIENT_CONNECTED;
-                ip = Common.IpAddrToString(m_device.GetIpAddress());
-                this.lblNomCamera.Text = m_device.GetManufacturerName() + " : " + m_device.GetModelName();
-            }
+            if (m_device != null)
+            {
+                try
+                {
+                    if (m_device.IsConnected())
+                    {
+                        camStatus = TCPstatus.CLIENT_CONNECTED;
+                        ip = Common.IpAddrToString(m_device.GetIpAddress());
+                        this.lblNomCamera.Text = m_device.GetManufacturerName() + " : " + m_device.GetModelName();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log exception and handle it appropriately
+                    Console.WriteLine("Error: " + ex.Message);
+                }
 
-            changeCOMstatus(lblComCam, camStatus, lblIPcam, ip);
+                changeCOMstatus(lblComCam, camStatus, lblIPcam, ip);
+            }
+        }
+
+        public void changeSerialStatus()
+        {
+            changeCOMstatus(lblComSerial, Serial.Status(), null, "");
         }
 
         private void UpdateLabelsInBackground()
         {
             while (true)
             {
-                changeTCPstatus();
-                changeCAMstatus();
+                if (this.IsHandleCreated)
+                {
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        // Code de modification des éléments graphiques ici
+                        changeTCPstatus();
+                        changeCAMstatus();
+                        changeSerialStatus();
+                    });
+                }
                 Thread.Sleep(100); // Attendez 0.1 seconde
             }
         }
@@ -248,6 +283,47 @@ namespace AcquisitionSmartek
         private void pbImage_Click(object sender, EventArgs e)
         {
 
+        }
+
+        async private void autoResponse(Infos info)
+        {
+            //if (pictureBox1.InvokeRequired)
+            //{
+            //    pictureBox1.Invoke(new Action(() => pictureBox1.Image = img));
+            //}
+            //else
+            {
+                Infos response = Infos.NB_INFOS;
+                if(info == Infos.READY_START)
+                {
+                    response = Infos.GO_START;
+                }
+                else if(info == Infos.READY_CAPTURE)
+                {
+                    response = Infos.GO_CAPTURE;
+                }
+                // Use the Timer class to delay the execution of the action
+                if(response != Infos.NB_INFOS)
+                {
+                    //System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer();
+                    //timer.Interval = 5000; // Delay for 5 seconds
+                    //timer.Tick += (sender, e) =>
+                    //{
+                        // Code to execute after the delay
+                        Serial.SendData(response);
+
+                        // Stop the timer
+                    //    timer.Stop();
+                    //};
+                    //timer.Start();
+                }
+            }
+        }
+
+        private void initSerial_Click(object sender, EventArgs e)
+        {
+            Serial.changePort(getCOMport());
+            Serial.open();
         }
     }
 }

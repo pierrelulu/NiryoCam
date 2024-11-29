@@ -54,7 +54,12 @@ namespace TcpIp
         }
         private void LogMessage(string message)
         {
-            _logger?.AppendText(message + "\r\n");
+            string timestamp = DateTime.Now.ToString("HH:mm:ss");
+            //string tag = types[(int)type];
+
+            string receivedData = $"[{timestamp}] {message}\r\n";
+            _logger?.AppendText(receivedData);
+
         }
         private void updateStatus()
         {
@@ -163,7 +168,7 @@ namespace TcpIp
             status = TCPstatus.CLOSED;
             return false;
         }
-        public bool sendData(byte[] load)
+        async public Task<bool> sendData(byte[] load)
         {
             if (tcpClient == null || status != TCPstatus.CLIENT_CONNECTED)
             {
@@ -174,8 +179,8 @@ namespace TcpIp
             {
                 NetworkStream stream = tcpClient.GetStream();
                 byte[] sizeInfo = BitConverter.GetBytes(load.Length);
-                stream.Write(sizeInfo, 0, sizeInfo.Length);
-                stream.Write(load, 0, load.Length);
+                await stream.WriteAsync(sizeInfo, 0, sizeInfo.Length);
+                await stream.WriteAsync(load, 0, load.Length);
                 LogMessage($"Image envoyée : {load.Length} bytes");
                 return true;
             }
@@ -190,7 +195,7 @@ namespace TcpIp
             bool success = true;
             success &= await openClient();
             if (success)
-                success &= sendData(load);
+                success &= await sendData(load);
             if (success)
                 success &= closeClient();
             return success;
@@ -201,12 +206,12 @@ namespace TcpIp
             byte[] imgBytes = (byte[])converter.ConvertTo(img, typeof(byte[]));
             return await sendDataOnce(imgBytes);
         }
-        public bool sendImageOnce(Bitmap bmp)
+        async public Task<bool> sendImageOnce(Bitmap bmp)
         {
             ImageConverter converter = new ImageConverter();
             byte[] imgBytes = (byte[])converter.ConvertTo(bmp, typeof(byte[]));
             //return await sendDataOnce(imgBytes);
-            return sendData(imgBytes);
+            return await sendData(imgBytes);
         }
         private async Task SendClientKeepAliveAsync()
         {

@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.pnlImage = new System.Windows.Forms.Panel();
             this.pbImage = new System.Windows.Forms.PictureBox();
             this.boutInit = new System.Windows.Forms.Button();
             this.boutAcquisition = new System.Windows.Forms.Button();
@@ -49,29 +48,24 @@
             this.ip1 = new System.Windows.Forms.TextBox();
             this.ip2 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.serialLogger = new System.Windows.Forms.TextBox();
+            this.initSerial = new System.Windows.Forms.Button();
+            this.lblComSerial = new System.Windows.Forms.Label();
+            this.nCOM = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pbImage)).BeginInit();
             this.gbCamera.SuspendLayout();
             this.tcpgroup.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // pnlImage
-            // 
-            this.pnlImage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pnlImage.AutoScroll = true;
-            this.pnlImage.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pnlImage.Location = new System.Drawing.Point(528, 146);
-            this.pnlImage.Name = "pnlImage";
-            this.pnlImage.Size = new System.Drawing.Size(270, 308);
-            this.pnlImage.TabIndex = 0;
             // 
             // pbImage
             // 
             this.pbImage.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pbImage.Location = new System.Drawing.Point(315, 12);
+            this.pbImage.Location = new System.Drawing.Point(298, 12);
             this.pbImage.Name = "pbImage";
-            this.pbImage.Size = new System.Drawing.Size(483, 442);
+            this.pbImage.Size = new System.Drawing.Size(587, 500);
             this.pbImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pbImage.TabIndex = 0;
             this.pbImage.TabStop = false;
@@ -89,7 +83,7 @@
             // 
             // boutAcquisition
             // 
-            this.boutAcquisition.Location = new System.Drawing.Point(13, 293);
+            this.boutAcquisition.Location = new System.Drawing.Point(14, 96);
             this.boutAcquisition.Name = "boutAcquisition";
             this.boutAcquisition.Size = new System.Drawing.Size(75, 23);
             this.boutAcquisition.TabIndex = 2;
@@ -99,7 +93,7 @@
             // 
             // boutQuit
             // 
-            this.boutQuit.Location = new System.Drawing.Point(12, 322);
+            this.boutQuit.Location = new System.Drawing.Point(12, 489);
             this.boutQuit.Name = "boutQuit";
             this.boutQuit.Size = new System.Drawing.Size(75, 23);
             this.boutQuit.TabIndex = 3;
@@ -109,7 +103,7 @@
             // 
             // timAcq
             // 
-            this.timAcq.Interval = 500;
+            this.timAcq.Interval = 1000;
             this.timAcq.Tick += new System.EventHandler(this.timAcq_Tick);
             // 
             // lblComCam
@@ -126,11 +120,13 @@
             // 
             this.gbCamera.Controls.Add(this.lblNomCamera);
             this.gbCamera.Controls.Add(this.lblIPcam);
+            this.gbCamera.Controls.Add(this.boutStop);
             this.gbCamera.Controls.Add(this.lblComCam);
             this.gbCamera.Controls.Add(this.boutInit);
-            this.gbCamera.Location = new System.Drawing.Point(12, 12);
+            this.gbCamera.Controls.Add(this.boutAcquisition);
+            this.gbCamera.Location = new System.Drawing.Point(13, 12);
             this.gbCamera.Name = "gbCamera";
-            this.gbCamera.Size = new System.Drawing.Size(280, 108);
+            this.gbCamera.Size = new System.Drawing.Size(279, 129);
             this.gbCamera.TabIndex = 5;
             this.gbCamera.TabStop = false;
             this.gbCamera.Text = "Caméra ";
@@ -157,7 +153,7 @@
             // 
             // boutStop
             // 
-            this.boutStop.Location = new System.Drawing.Point(111, 293);
+            this.boutStop.Location = new System.Drawing.Point(176, 96);
             this.boutStop.Name = "boutStop";
             this.boutStop.Size = new System.Drawing.Size(75, 23);
             this.boutStop.TabIndex = 6;
@@ -204,7 +200,7 @@
             this.tcpgroup.Controls.Add(this.ip1);
             this.tcpgroup.Controls.Add(this.ip2);
             this.tcpgroup.Controls.Add(this.label1);
-            this.tcpgroup.Location = new System.Drawing.Point(13, 126);
+            this.tcpgroup.Location = new System.Drawing.Point(13, 147);
             this.tcpgroup.Name = "tcpgroup";
             this.tcpgroup.Size = new System.Drawing.Size(279, 161);
             this.tcpgroup.TabIndex = 9;
@@ -264,19 +260,80 @@
             this.label1.TabIndex = 4;
             this.label1.Text = "IP:             .           .           .";
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.serialLogger);
+            this.groupBox1.Controls.Add(this.initSerial);
+            this.groupBox1.Controls.Add(this.lblComSerial);
+            this.groupBox1.Controls.Add(this.nCOM);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Location = new System.Drawing.Point(13, 322);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(279, 161);
+            this.groupBox1.TabIndex = 10;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Serial Connection";
+            // 
+            // serialLogger
+            // 
+            this.serialLogger.AcceptsReturn = true;
+            this.serialLogger.Location = new System.Drawing.Point(6, 84);
+            this.serialLogger.Multiline = true;
+            this.serialLogger.Name = "serialLogger";
+            this.serialLogger.Size = new System.Drawing.Size(267, 71);
+            this.serialLogger.TabIndex = 8;
+            // 
+            // initSerial
+            // 
+            this.initSerial.Location = new System.Drawing.Point(198, 15);
+            this.initSerial.Name = "initSerial";
+            this.initSerial.Size = new System.Drawing.Size(75, 23);
+            this.initSerial.TabIndex = 7;
+            this.initSerial.Text = "Init";
+            this.initSerial.UseVisualStyleBackColor = true;
+            this.initSerial.Click += new System.EventHandler(this.initSerial_Click);
+            // 
+            // lblComSerial
+            // 
+            this.lblComSerial.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.lblComSerial.Location = new System.Drawing.Point(6, 42);
+            this.lblComSerial.Name = "lblComSerial";
+            this.lblComSerial.Size = new System.Drawing.Size(267, 33);
+            this.lblComSerial.TabIndex = 4;
+            this.lblComSerial.Text = "Non Connecté";
+            this.lblComSerial.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // nCOM
+            // 
+            this.nCOM.Location = new System.Drawing.Point(66, 18);
+            this.nCOM.MaxLength = 3;
+            this.nCOM.Name = "nCOM";
+            this.nCOM.Size = new System.Drawing.Size(30, 20);
+            this.nCOM.TabIndex = 0;
+            this.nCOM.Text = "3";
+            this.nCOM.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.nCOM.WordWrap = false;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 21);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(59, 13);
+            this.label3.TabIndex = 4;
+            this.label3.Text = "Port : COM";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(804, 466);
+            this.ClientSize = new System.Drawing.Size(897, 521);
             this.ControlBox = false;
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.tcpgroup);
             this.Controls.Add(this.pbImage);
-            this.Controls.Add(this.boutStop);
             this.Controls.Add(this.gbCamera);
             this.Controls.Add(this.boutQuit);
-            this.Controls.Add(this.boutAcquisition);
-            this.Controls.Add(this.pnlImage);
             this.Name = "Form1";
             this.Text = "Acquisition SMARTEK";
             ((System.ComponentModel.ISupportInitialize)(this.pbImage)).EndInit();
@@ -284,13 +341,13 @@
             this.gbCamera.PerformLayout();
             this.tcpgroup.ResumeLayout(false);
             this.tcpgroup.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
 
         }
 
         #endregion
-
-        private System.Windows.Forms.Panel pnlImage;
         private System.Windows.Forms.PictureBox pbImage;
         private System.Windows.Forms.Button boutInit;
         private System.Windows.Forms.Button boutAcquisition;
@@ -310,6 +367,12 @@
         private System.Windows.Forms.TextBox ip1;
         private System.Windows.Forms.TextBox ip2;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.TextBox serialLogger;
+        private System.Windows.Forms.Button initSerial;
+        private System.Windows.Forms.Label lblComSerial;
+        private System.Windows.Forms.TextBox nCOM;
+        private System.Windows.Forms.Label label3;
     }
 }
 
