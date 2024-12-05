@@ -103,7 +103,7 @@
             // 
             // timAcq
             // 
-            this.timAcq.Interval = 1000;
+            this.timAcq.Interval = 50;
             this.timAcq.Tick += new System.EventHandler(this.timAcq_Tick);
             // 
             // lblComCam

@@ -22,6 +22,9 @@ namespace AcquisitionSmartek
         TCP tcp;
         SerialCOM Serial;
         TCPstatus camStatus = TCPstatus.CLOSED;
+        //private readonly object _lockPb = new object();
+        private bool imageLock = false;
+        private Bitmap img;
 
         public Form1()
         {
@@ -123,51 +126,43 @@ namespace AcquisitionSmartek
             {
                 if (!m_device.IsBufferEmpty())
                 {
-                    gige.IImageInfo imageInfo = null;
-                    m_device.GetImageInfo(ref imageInfo);
-                    if (imageInfo != null)
+                    while (imageLock)
                     {
-                        Bitmap bitmap = (Bitmap)this.pbImage.Image;
-                        BitmapData bd = null;
-
-                        ImageUtils.CopyToBitmap(imageInfo, ref bitmap, ref bd, ref m_pixelFormat, ref m_rect, ref m_pixelType);
-                        //-------------------------------------------------------------------
-                        //if (m_pixelFormat == PixelFormat.Format8bppIndexed)
-                        //{
-                        //    // set palette
-                        //    ColorPalette palette = bitmap.Palette;
-                        //    for (int i = 0; i < 256; i++)
-                        //    {
-                        //        palette.Entries[i] = Color.FromArgb(255 - i, 255 - i, 255 - i);
-                        //    }
-                        //    bitmap.Palette = palette;
-                        //}
-                        //-------------------------------------------------------------------
-                        
-                        // display image
-                        if (bd != null)
-                            bitmap.UnlockBits(bd);
-                        
-                        if (bitmap != null)
-                        {
-                            //ClImage Img = ClImage.traiter(bitmap);
-                            //bitmap = (Bitmap)Img.result;
-                            //this.pbImage.Height = bitmap.Height;
-                            //this.pbImage.Width = bitmap.Width;
-                            if (tcp.Status() == TCPstatus.CLIENT_CONNECTED) {
-                                await tcp.sendImageOnce(bitmap);
-                            }
-                            this.pbImage.Image = bitmap;
-                        }
-
-                        this.pbImage.Invalidate();
+                        await Task.Delay(100);
                     }
-                    // remove (pop) image from image buffer
-                    m_device.PopImage(imageInfo);
-                    // empty buffer
-                    m_device.ClearImageBuffer();
+                    if(!imageLock)
+                    {
+                        imageLock = true;
+                        gige.IImageInfo imageInfo = null;
+                        m_device.GetImageInfo(ref imageInfo);
+                        if (imageInfo != null)
+                        {
+                            Bitmap bitmap = (Bitmap)this.pbImage.Image;
+                            BitmapData bd = null;
 
-                    GC.Collect();
+                            ImageUtils.CopyToBitmap(imageInfo, ref bitmap, ref bd, ref m_pixelFormat, ref m_rect, ref m_pixelType);
+                            if (bd != null)
+                                bitmap.UnlockBits(bd);
+                        
+                            // display image
+                            if (bitmap != null)
+                            {
+                                img = new Bitmap(bitmap);
+                                this.pbImage.Image = bitmap;
+                            }
+
+                            
+                        }
+                        // remove (pop) image from image buffer
+                        m_device.PopImage(imageInfo);
+                        // empty buffer
+                        m_device.ClearImageBuffer();
+
+                        GC.Collect();
+                        
+                        this.pbImage.Invalidate();
+                        imageLock = false;
+                    }
                 }
             }
             timAcq.Start();
@@ -309,6 +304,18 @@ namespace AcquisitionSmartek
                 }
                 else if(info == Infos.READY_CAPTURE)
                 {
+                    while (imageLock)
+                    {
+                        await Task.Delay(100);
+                    }
+
+                    if (!imageLock)
+                    {
+                        imageLock = true;
+                        await tcp.sendImageOnce(img);
+                        imageLock = false;
+                    }
+
                     response = Infos.GO_CAPTURE;
                 }
                 // Use the Timer class to delay the execution of the action
@@ -318,13 +325,31 @@ namespace AcquisitionSmartek
                     //timer.Interval = 5000; // Delay for 5 seconds
                     //timer.Tick += (sender, e) =>
                     //{
-                        // Code to execute after the delay
-                        Serial.SendData(response);
+                    // Code to execute after the delay
+                    Serial.SendData(response);
 
                         // Stop the timer
                     //    timer.Stop();
                     //};
                     //timer.Start();
+                }
+            }
+        }
+
+        private async Task WaitForImageUnlock()
+        {
+            while (true)
+            {
+                try
+                {
+                    // Essayer d'accéder à l'image pour vérifier si elle est déverrouillée
+                    var img = pbImage.Image;
+                    break; // Si l'accès réussit, sortir de la boucle
+                }
+                catch (InvalidOperationException)
+                {
+                    // L'image est verrouillée, attendre un court instant avant de réessayer
+                    await Task.Delay(100);
                 }
             }
         }

@@ -90,12 +90,26 @@ namespace Serial
 
         private void LogMessage(string message, messageTypes type = messageTypes.OTHER)
         {
-            string timestamp = DateTime.Now.ToString("HH:mm:ss");
-            string tag = types[(int)type];
-            
-            string receivedData = $"[{timestamp}] {tag}: {message}\r\n";
-            logger?.AppendText(receivedData);
+            if(logger == null)
+            {
+                return;
+            }
+
+
+            if (logger.InvokeRequired)
+            {
+                logger.Invoke(new Action(() => LogMessage(message, type)));
+            }
+            else
+            {
+                string timestamp = DateTime.Now.ToString("HH:mm:ss");
+                string tag = types[(int)type];
+
+                string receivedData = $"[{timestamp}] {tag}: {message}\r\n";
+                logger.AppendText(receivedData);
+            }
         }
+
 
         public TCPstatus Status()
         {

@@ -90,7 +90,7 @@ namespace Analysis_Server
                     break;
             }
 
-            switch(status)
+            /*switch(status)
             {
                 case processStatus.WAITING_COM:
                     anaStatus.BackColor = Color.Orange;
@@ -111,7 +111,7 @@ namespace Analysis_Server
                     anaStatus.BackColor = Color.Red;
                     anaStatus.Text = "Error !";
                     break;
-            }
+            }*/
         }
 
         async private void connectButton_Click(object sender, EventArgs e)

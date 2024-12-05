@@ -54,13 +54,23 @@ namespace TcpIp
         }
         private void LogMessage(string message)
         {
-            string timestamp = DateTime.Now.ToString("HH:mm:ss");
-            //string tag = types[(int)type];
+            if(_logger == null)
+                return;
 
-            string receivedData = $"[{timestamp}] {message}\r\n";
-            _logger?.AppendText(receivedData);
+            if (_logger.InvokeRequired)
+            {
+                _logger.Invoke(new Action(() => LogMessage(message)));
+            }
+            else
+            {
+                string timestamp = DateTime.Now.ToString("HH:mm:ss");
+                //string tag = types[(int)type];
 
+                string receivedData = $"[{timestamp}] {message}\r\n";
+                _logger?.AppendText(receivedData);
+            }
         }
+
         private void updateStatus()
         {
             if (tcpClient != null)
@@ -120,9 +130,9 @@ namespace TcpIp
         }
         async public Task<bool> openClient()
         {
-            if (status == TCPstatus.SERVER_OPEN || status == TCPstatus.SERVER_CONNECTED)
+            if (status == TCPstatus.SERVER_CONNECTED)
             {
-                LogMessage("Serveur déjà en cours d'exécution");
+                LogMessage("Serveur déjà en cours d'exécution, ne peut pas ouvrir le client");
                 return false;
             }
             if (tcpClient != null || status == TCPstatus.CLIENT_CONNECTED)
@@ -202,17 +212,17 @@ namespace TcpIp
         }
         async public Task<bool> sendImageOnce(Image img)
         {
-            ImageConverter converter = new ImageConverter();
-            byte[] imgBytes = (byte[])converter.ConvertTo(img, typeof(byte[]));
-            return await sendDataOnce(imgBytes);
+            // Créer une copie de l'image pour éviter l'erreur "objet utilisé ailleurs"
+            using (var ms = new MemoryStream())
+            {
+                img?.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                byte[] imgBytes = ms.ToArray();
+                if (imgBytes != null && imgBytes.Length > 0)
+                    return await sendData(imgBytes);
+            }
+            return false;
         }
-        async public Task<bool> sendImageOnce(Bitmap bmp)
-        {
-            ImageConverter converter = new ImageConverter();
-            byte[] imgBytes = (byte[])converter.ConvertTo(bmp, typeof(byte[]));
-            //return await sendDataOnce(imgBytes);
-            return await sendData(imgBytes);
-        }
+        
         private async Task SendClientKeepAliveAsync()
         {
             while (status == TCPstatus.CLIENT_CONNECTED && !_cts.Token.IsCancellationRequested)
@@ -221,7 +231,7 @@ namespace TcpIp
                 {
                     var keepAliveMessage = CreateMessage("KEEP_ALIVE");
                     await tcpClient.GetStream().WriteAsync(keepAliveMessage, 0, keepAliveMessage.Length);
-                    LogMessage("Client sent Keep alive...");
+                    //LogMessage("Client sent Keep alive...");
                     await Task.Delay(KeepAliveInterval);
                     if ((DateTime.Now - _lastKeepAliveReceived).TotalMilliseconds > KeepAliveTimeout)
                     {
@@ -250,7 +260,7 @@ namespace TcpIp
                 {
                     var keepAliveMessage = CreateMessage("KEEP_ALIVE");
                     await client.GetStream().WriteAsync(keepAliveMessage, 0, keepAliveMessage.Length);
-                    LogMessage("Server sent Keep alive...");
+                    //LogMessage("Server sent Keep alive...");
                     await Task.Delay(KeepAliveInterval);
                     // Check for keep-alive timeout
                     if ((DateTime.Now - _lastKeepAliveReceived).TotalMilliseconds > KeepAliveTimeout)
@@ -278,10 +288,10 @@ namespace TcpIp
         {
             if (status == TCPstatus.CLIENT_OPEN || status == TCPstatus.CLIENT_CONNECTED)
             {
-                LogMessage("Client déjà en cours d'exécution");
+                LogMessage("Client déjà en cours d'exécution, ne peut pas démarrer Serveur");
                 return false;
             }
-            if (tcpServer != null || status == TCPstatus.SERVER_CONNECTED)
+            if (status == TCPstatus.SERVER_CONNECTED)
             {
                 LogMessage("Serveur déjà en cours d'exécution");
                 return false;
@@ -289,6 +299,8 @@ namespace TcpIp
             lock (_lock)
             {
                 status = TCPstatus.SERVER_OPEN;
+                if (tcpServer != null)
+                    closeServer();
                 tcpServer = new TcpListener(IPAddress.Any, m_numPort);
                 tcpServer.Start();
                 _cts = new CancellationTokenSource();
@@ -315,7 +327,7 @@ namespace TcpIp
         }
         public bool closeServer()
         {
-            if (tcpServer != null && status == TCPstatus.SERVER_CONNECTED)
+            if (tcpServer != null)
             {
                 tcpServer.Stop();
                 status = TCPstatus.CLOSED;
@@ -341,16 +353,16 @@ namespace TcpIp
                 try
                 {
                     var byteCount = await stream.ReadAsync(sizeInfo, 0, sizeInfo.Length, _cts.Token);
-                    int dataSize = BitConverter.ToInt32(sizeInfo, 0);
-                    if (byteCount > 0 && dataSize > 0)
+                    if (byteCount > 0)
                     {
+                        int dataSize = BitConverter.ToInt32(sizeInfo, 0);
                         byte[] data = new byte[dataSize];
                         byteCount = await stream.ReadAsync(data, 0, data.Length, _cts.Token);
                         var message = Encoding.ASCII.GetString(data, 0, byteCount);
                         if (message == "KEEP_ALIVE")
                         {
                             _lastKeepAliveReceived = DateTime.Now;
-                            LogMessage("Received keep alive from server.");
+                            //LogMessage("Received keep alive from server.");
                         }
                     }
                     else
@@ -364,7 +376,7 @@ namespace TcpIp
                 }
                 catch (Exception e)
                 {
-                    LogMessage($"Error receiving keep alive: {e.Message} (Status : {status})");
+                    LogMessage($"Error client receiving keep alive: {e.Message} (Status : {status})");
                     closeClient();
                 }
             }
@@ -388,16 +400,16 @@ namespace TcpIp
                 try
                 {
                     var byteCount = await stream.ReadAsync(sizeInfo, 0, sizeInfo.Length, _cts.Token);
-                    int dataSize = BitConverter.ToInt32(sizeInfo, 0);
-                    if (byteCount > 0 && dataSize > 0)
+                    if (byteCount > 0)
                     {
+                        int dataSize = BitConverter.ToInt32(sizeInfo, 0);
                         byte[] data = new byte[dataSize];
                         byteCount = await stream.ReadAsync(data, 0, data.Length, _cts.Token);
                         var message = Encoding.ASCII.GetString(data, 0, byteCount);
                         if (message == "KEEP_ALIVE")
                         {
                             _lastKeepAliveReceived = DateTime.Now;
-                            LogMessage("Received keep alive from client.");
+                            //LogMessage("Received keep alive from client.");
                             // Envoyer un keep-alive en réponse
                             //var keepAliveResponse = Encoding.ASCII.GetBytes("KEEP_ALIVE");
                             //await stream.WriteAsync(keepAliveResponse, 0, keepAliveResponse.Length);
@@ -423,7 +435,7 @@ namespace TcpIp
 
                 catch (Exception e)
                 {
-                    LogMessage($"Error receiving keep alive: {e.Message} (Status : {status})");
+                    LogMessage($"Error server receiving keep alive: {e.Message} (Status : {status})");
                     closeClient();
                 }
             }
