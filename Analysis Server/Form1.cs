@@ -129,8 +129,11 @@ namespace Analysis_Server
             else
             {
                 pictureBox1.Image = img;
-                imageAnalysis = await ClImage.traiter(img);
-                pictureBox2.Image = imageAnalysis.result;
+                img.Save("image1.png");
+                imageAnalysis = await ClImage.traiter(img); //dll
+                Image img_out = imageAnalysis.result;
+                pictureBox2.Image = img_out;
+                img_out.Save("img_out.png");
             }
         }
 

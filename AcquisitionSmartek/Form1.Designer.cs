@@ -54,6 +54,10 @@
             this.lblComSerial = new System.Windows.Forms.Label();
             this.nCOM = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.Manual_ack_button = new System.Windows.Forms.Button();
+            this.perspective_button = new System.Windows.Forms.Button();
+            this.calibration_button = new System.Windows.Forms.Button();
+            this.reconstruction_button = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pbImage)).BeginInit();
             this.gbCamera.SuspendLayout();
             this.tcpgroup.SuspendLayout();
@@ -93,7 +97,7 @@
             // 
             // boutQuit
             // 
-            this.boutQuit.Location = new System.Drawing.Point(12, 489);
+            this.boutQuit.Location = new System.Drawing.Point(3, 571);
             this.boutQuit.Name = "boutQuit";
             this.boutQuit.Size = new System.Drawing.Size(75, 23);
             this.boutQuit.TabIndex = 3;
@@ -267,7 +271,7 @@
             this.groupBox1.Controls.Add(this.lblComSerial);
             this.groupBox1.Controls.Add(this.nCOM);
             this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Location = new System.Drawing.Point(13, 322);
+            this.groupBox1.Location = new System.Drawing.Point(4, 404);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(279, 161);
             this.groupBox1.TabIndex = 10;
@@ -323,12 +327,56 @@
             this.label3.TabIndex = 4;
             this.label3.Text = "Port : COM";
             // 
+            // Manual_ack_button
+            // 
+            this.Manual_ack_button.Location = new System.Drawing.Point(185, 343);
+            this.Manual_ack_button.Name = "Manual_ack_button";
+            this.Manual_ack_button.Size = new System.Drawing.Size(92, 23);
+            this.Manual_ack_button.TabIndex = 11;
+            this.Manual_ack_button.Text = "Manual_ACK";
+            this.Manual_ack_button.UseVisualStyleBackColor = true;
+            this.Manual_ack_button.Click += new System.EventHandler(this.Manual_ack_button_Click);
+            // 
+            // perspective_button
+            // 
+            this.perspective_button.Location = new System.Drawing.Point(19, 314);
+            this.perspective_button.Name = "perspective_button";
+            this.perspective_button.Size = new System.Drawing.Size(112, 23);
+            this.perspective_button.TabIndex = 12;
+            this.perspective_button.Text = "Perspective ACK";
+            this.perspective_button.UseVisualStyleBackColor = true;
+            this.perspective_button.Click += new System.EventHandler(this.perspective_button_Click);
+            // 
+            // calibration_button
+            // 
+            this.calibration_button.Location = new System.Drawing.Point(19, 343);
+            this.calibration_button.Name = "calibration_button";
+            this.calibration_button.Size = new System.Drawing.Size(112, 23);
+            this.calibration_button.TabIndex = 13;
+            this.calibration_button.Text = "Calibration ACK";
+            this.calibration_button.UseVisualStyleBackColor = true;
+            this.calibration_button.Click += new System.EventHandler(this.calibration_button_Click);
+            // 
+            // reconstruction_button
+            // 
+            this.reconstruction_button.Location = new System.Drawing.Point(19, 372);
+            this.reconstruction_button.Name = "reconstruction_button";
+            this.reconstruction_button.Size = new System.Drawing.Size(112, 23);
+            this.reconstruction_button.TabIndex = 14;
+            this.reconstruction_button.Text = "Reconstruction ACK";
+            this.reconstruction_button.UseVisualStyleBackColor = true;
+            this.reconstruction_button.Click += new System.EventHandler(this.reconstruction_button_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(897, 521);
+            this.ClientSize = new System.Drawing.Size(897, 608);
             this.ControlBox = false;
+            this.Controls.Add(this.reconstruction_button);
+            this.Controls.Add(this.calibration_button);
+            this.Controls.Add(this.perspective_button);
+            this.Controls.Add(this.Manual_ack_button);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.tcpgroup);
             this.Controls.Add(this.pbImage);
@@ -373,6 +421,10 @@
         private System.Windows.Forms.Label lblComSerial;
         private System.Windows.Forms.TextBox nCOM;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button Manual_ack_button;
+        private System.Windows.Forms.Button perspective_button;
+        private System.Windows.Forms.Button calibration_button;
+        private System.Windows.Forms.Button reconstruction_button;
     }
 }
 

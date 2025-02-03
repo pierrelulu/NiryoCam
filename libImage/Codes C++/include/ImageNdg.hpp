@@ -40,16 +40,16 @@ private:
     int             m_iLargeur;
     bool            m_bBinaire;
     std::string     m_sNom;
-    unsigned char * m_pucPixel;
+    unsigned char* m_pucPixel;
 
-    unsigned char * m_pucPalette;
+    unsigned char* m_pucPalette;
 
 public:
     // constructeurs
     _EXPORT_ CImageNdg();                                       // par defaut
     _EXPORT_ CImageNdg(int hauteur, int largeur, int val = -1); // si -1 alors non pixels non initialises
     _EXPORT_ CImageNdg(const std::string nom);                  // fichier en entree
-    _EXPORT_ CImageNdg(const CImageNdg & im);                   // image en entree
+    _EXPORT_ CImageNdg(const CImageNdg& im);                   // image en entree
 
     // destructeur
     _EXPORT_ ~CImageNdg();
@@ -58,14 +58,14 @@ public:
     _EXPORT_ void sauvegarde(const std::string file = ""); // sauvegarde data au format BMP
 
     // pouvoir acceder e un pixel par image(i)
-    _EXPORT_ unsigned char & operator()(int i) const
+    _EXPORT_ unsigned char& operator()(int i) const
     {
         int ti = max(0, min(i, m_iHauteur * m_iLargeur - 1));
         return m_pucPixel[ti];
     }
 
     // pouvoir acceder e un pixel par image(i,j)
-    _EXPORT_ unsigned char & operator()(int i, int j) const
+    _EXPORT_ unsigned char& operator()(int i, int j) const
     {
         int ti = max(0, min(i, m_iHauteur - 1));
         int tj = max(0, min(j, m_iLargeur - 1));
@@ -73,7 +73,7 @@ public:
     }
 
     // pouvoir acceder e un pixel par image(i,j)
-    _EXPORT_ CImageNdg operator-(CImageNdg &other)
+    _EXPORT_ CImageNdg operator-(CImageNdg& other)
     {
         CImageNdg temp(*this);
 
@@ -81,7 +81,7 @@ public:
     }
 
     // operateur copie image par imOut = imIn
-    _EXPORT_ CImageNdg & operator=(const CImageNdg & im);
+    _EXPORT_ CImageNdg& operator=(const CImageNdg& im);
 
     // get et set
 
@@ -130,13 +130,13 @@ public:
         return m_iHauteur * m_iLargeur;
     }
 
-    _EXPORT_ CImageNdg & choixPalette(std::string name = "grise")
+    _EXPORT_ CImageNdg& choixPalette(std::string name = "grise")
     {
         if (name.compare("rouge") == 0)
         {
             for (int indice = 0; indice < 256; indice++)
             {
-                this->m_pucPalette[indice * 4]     = 0;
+                this->m_pucPalette[indice * 4] = 0;
                 this->m_pucPalette[indice * 4 + 1] = 0;
                 this->m_pucPalette[indice * 4 + 2] = (unsigned char)(indice);
                 this->m_pucPalette[indice * 4 + 3] = 0;
@@ -146,7 +146,7 @@ public:
         {
             for (int indice = 0; indice < 256; indice++)
             {
-                this->m_pucPalette[indice * 4]     = 0;
+                this->m_pucPalette[indice * 4] = 0;
                 this->m_pucPalette[indice * 4 + 1] = (unsigned char)(indice);
                 this->m_pucPalette[indice * 4 + 2] = 0;
                 this->m_pucPalette[indice * 4 + 3] = 0;
@@ -156,7 +156,7 @@ public:
         {
             for (int indice = 0; indice < 256; indice++)
             {
-                this->m_pucPalette[indice * 4]     = (unsigned char)(indice);
+                this->m_pucPalette[indice * 4] = (unsigned char)(indice);
                 this->m_pucPalette[indice * 4 + 1] = 0;
                 this->m_pucPalette[indice * 4 + 2] = 0;
                 this->m_pucPalette[indice * 4 + 3] = 0;
@@ -165,19 +165,19 @@ public:
         else if (name.compare("binaire") == 0)
         {
             // fond toujours e 0
-            this->m_pucPalette[0]  = 0;
-            this->m_pucPalette[1]  = 0;
-            this->m_pucPalette[2]  = 0;
-            this->m_pucPalette[3]  = 0;
+            this->m_pucPalette[0] = 0;
+            this->m_pucPalette[1] = 0;
+            this->m_pucPalette[2] = 0;
+            this->m_pucPalette[3] = 0;
 
             // 8 couleurs de base
             // ensuite periodicite, de sorte que l'objet 1 a le meme label que l'objet 9 par exemple
-            this->m_pucPalette[4]  = 255;
-            this->m_pucPalette[5]  = 0;
-            this->m_pucPalette[6]  = 0;
-            this->m_pucPalette[7]  = 0;
-            this->m_pucPalette[8]  = 0;
-            this->m_pucPalette[9]  = 255;
+            this->m_pucPalette[4] = 255;
+            this->m_pucPalette[5] = 0;
+            this->m_pucPalette[6] = 0;
+            this->m_pucPalette[7] = 0;
+            this->m_pucPalette[8] = 0;
+            this->m_pucPalette[9] = 255;
             this->m_pucPalette[10] = 0;
             this->m_pucPalette[11] = 0;
             this->m_pucPalette[12] = 0;
@@ -207,7 +207,7 @@ public:
 
             for (int indice = 9; indice < 256; indice++)
             {
-                this->m_pucPalette[indice * 4]     = this->m_pucPalette[indice * 4 - 32];
+                this->m_pucPalette[indice * 4] = this->m_pucPalette[indice * 4 - 32];
                 this->m_pucPalette[indice * 4 + 1] = this->m_pucPalette[indice * 4 + 1 - 32];
                 ;
                 this->m_pucPalette[indice * 4 + 2] = this->m_pucPalette[indice * 4 + 2 - 32];
@@ -218,7 +218,7 @@ public:
         else // palette gris
             for (int indice = 0; indice < 256; indice++)
             {
-                this->m_pucPalette[indice * 4]     = (unsigned char)(indice);
+                this->m_pucPalette[indice * 4] = (unsigned char)(indice);
                 this->m_pucPalette[indice * 4 + 1] = (unsigned char)(indice);
                 this->m_pucPalette[indice * 4 + 2] = (unsigned char)(indice);
                 this->m_pucPalette[indice * 4 + 3] = 0;
@@ -226,12 +226,12 @@ public:
         return *this;
     }
 
-    _EXPORT_ CImageNdg & choixPalette(std::vector<int> map)
+    _EXPORT_ CImageNdg& choixPalette(std::vector<int> map)
     {
         // couleurs donnees par tableau de 256 couleurs RGB)
         for (int indice = 0; indice < 256; indice++)
         {
-            this->m_pucPalette[indice * 4]     = (unsigned char)map[indice * 3 + 2];
+            this->m_pucPalette[indice * 4] = (unsigned char)map[indice * 3 + 2];
             this->m_pucPalette[indice * 4 + 1] = (unsigned char)map[indice * 3 + 1];
             this->m_pucPalette[indice * 4 + 2] = (unsigned char)map[indice * 3];
             this->m_pucPalette[indice * 4 + 3] = 0;
@@ -248,7 +248,7 @@ public:
         {
             palette[indice * 3 + 2] = this->m_pucPalette[indice * 4];
             palette[indice * 3 + 1] = this->m_pucPalette[indice * 4 + 1];
-            palette[indice * 3]     = this->m_pucPalette[indice * 4 + 2];
+            palette[indice * 3] = this->m_pucPalette[indice * 4 + 2];
         }
         return palette;
     }
@@ -265,7 +265,7 @@ public:
     // operations ensemblistes pour images binaires
     // im1 = im1 operation im2;
     // options : "et", "ou", "-"
-    _EXPORT_ CImageNdg & operation(const CImageNdg & im, const std::string methode = "et");
+    _EXPORT_ CImageNdg& operation(const CImageNdg& im, const std::string methode = "et");
 
     // Score
     // _EXPORT_ CImageNdg& score(const CImageNdg& im, const std::string methode = "iou");
@@ -287,17 +287,166 @@ public:
 
     // Filtrage
     // options : "moyennage", "median"
-    _EXPORT_ CImageNdg filtrage(const std::string & methode = "moyennage", int Ni = 3,
-                                int Nj = 3); // choix "moyennage" / "median"
+    _EXPORT_ CImageNdg filtrage(const std::string& methode = "moyennage", int Ni = 3,
+        int Nj = 3); // choix "moyennage" / "median"
 
     // Transformee de Hough
     _EXPORT_ CImageNdg hough(int threshold = 140, bool colorForEachLine = false);
 
-    _EXPORT_ CImageNdg horizontalConcatenate(const CImageNdg & im);
-    _EXPORT_ CImageNdg verticalConcatenate(const CImageNdg & im);
+    _EXPORT_ CImageNdg horizontalConcatenate(const CImageNdg& im);
+    _EXPORT_ CImageNdg verticalConcatenate(const CImageNdg& im);
 
     _EXPORT_ double correlation_croisee_normalisee(const CImageNdg& imgRef);
+
+
 
 };
 
 #endif // _IMAGE_NDG_
+
+_EXPORT_ void zhangSuenSkeletonization(CImageNdg& binImg);
+
+_EXPORT_ void connectedComponents(
+    const CImageNdg& binImg,
+    CImageNdg& labels,
+    int& numLabels);
+
+_EXPORT_ void process_image(
+    const CImageNdg& inputColorOrGray,
+    CImageNdg& labels,
+    int& numLabels,
+    CImageNdg& imageSquelette,
+    float seuil
+);
+
+_EXPORT_ void correctLines(
+    const CImageNdg& labels,
+    int numLabels,
+    std::vector<std::vector<std::pair<int, int>>>& corrections,
+    CImageNdg& correctedLabels
+);
+
+_EXPORT_ void buildCorrectionField(
+    const CImageNdg& labels,
+    int numLabels,
+    const std::vector<std::vector<std::pair<int, int>>>& corrections,
+    std::vector<std::vector<float>>& correctionField
+);
+
+_EXPORT_ void verticalInterpolation(std::vector<std::vector<float>>& corrField);
+
+_EXPORT_ void gaussianBlur2D(
+    const std::vector<std::vector<float>>& input,
+    float sigma,
+    std::vector<std::vector<float>>& output
+);
+
+_EXPORT_ void applyCorrectionField(
+    const CImageNdg& newLabels,
+    const std::vector<std::vector<float>>& correctionField,
+    CImageNdg& correctedNewLabels
+);
+
+_EXPORT_ void build3DPointsFromCorrection(
+    const CImageNdg& correctedVolume,
+    const std::vector<std::vector<float>>& corrField,
+    std::vector<float>& X,
+    std::vector<float>& Y,
+    std::vector<float>& Z,
+    bool applyTransform
+);
+
+_EXPORT_ void centerAndScalePoints(
+    std::vector<float>& xcoords,
+    std::vector<float>& ycoords,
+    std::vector<float>& zcoords,
+    float scale_factor
+);
+
+_EXPORT_ std::vector<int> computeScaleY(
+    const std::vector<std::vector<int>>& correctedLabels,
+    int num
+);
+
+_EXPORT_ float computeScaleZ(
+    const std::vector<std::vector<int>>& newLabels,
+    const std::vector<std::vector<float>>& depthMap,
+    float realMaxDiffMm
+);
+
+_EXPORT_ void scaleAndShiftCloud(
+    std::vector<float>& X,
+    std::vector<float>& Y,
+    std::vector<float>& Z,
+    float scaleX,
+    float scaleY,
+    float scaleZ
+);
+
+_EXPORT_ CImageNdg recomposeImageFromXYZ(
+    const std::vector<float>& X,
+    const std::vector<float>& Y,
+    const std::vector<float>& Z,
+    unsigned char valFond
+);
+
+_EXPORT_ void exportPointsToPLY(
+    const std::vector<float>& X,
+    const std::vector<float>& Y,
+    const std::vector<float>& Z,
+    const std::string& filename
+);
+
+
+_EXPORT_ void sortByColumn(
+    const std::vector<float>& X,
+    const std::vector<float>& Y,
+    const std::vector<float>& Z,
+    std::vector<float>& X_sort,
+    std::vector<float>& Y_sort,
+    std::vector<float>& Z_sort,
+    int col
+);
+
+_EXPORT_ void interp1_previous(
+    const std::vector<int>& linePosition,
+    const std::vector<float>& Y_sorted,
+    std::vector<float>& Y_interp,
+    std::vector<bool>& valid_index
+);
+
+_EXPORT_ void extract_valid(
+    const std::vector<float>& X,
+    const std::vector<float>& Y,
+    const std::vector<float>& Z,
+    const std::vector<bool>& valid_index,
+    std::vector<float>& X_valid,
+    std::vector<float>& Y_valid,
+    std::vector<float>& Z_valid
+);
+
+_EXPORT_ void generate_calibre(
+    const std::vector<int>& linePositions,
+    const std::vector<float>& X,
+    const std::vector<float>& Y,
+    const std::vector<float>& Z,
+    std::vector<float> calibre[],
+    std::vector<float> dZ_dX[]
+);
+
+_EXPORT_ void computeCalibration(
+    const std::vector<float> calibre[],
+    std::pair<float, float> calibration[],
+    std::vector<float>& X,
+    std::vector<float>& Y,
+    std::vector<float>& Z
+);
+
+void applyCalibration(
+    std::pair<float, float> calibration[],
+    std::vector<float>& X,
+    std::vector<float>& Y,
+    std::vector<float>& Z,
+    std::vector<float>& X_scaled,
+    std::vector<float>& Y_scaled,
+    std::vector<float>& Z_scaled);

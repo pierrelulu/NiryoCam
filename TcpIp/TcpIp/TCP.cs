@@ -364,6 +364,11 @@ namespace TcpIp
                             _lastKeepAliveReceived = DateTime.Now;
                             //LogMessage("Received keep alive from server.");
                         }
+                        if (message == "CALIB")
+                        {
+                            _lastKeepAliveReceived = DateTime.Now;
+                            //LogMessage("Received keep alive from server.");
+                        }
                     }
                     else
                     {

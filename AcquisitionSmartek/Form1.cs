@@ -359,5 +359,42 @@ namespace AcquisitionSmartek
             Serial.changePort(getCOMport());
             Serial.open();
         }
+
+        private void Manual_ack_button_Click(object sender, EventArgs e)
+        {
+            
+                imageLock = true;
+                tcp.sendImageOnce(img);
+                imageLock = false;
+        }
+
+        private void perspective_button_Click(object sender, EventArgs e)
+        {
+            Serial.changePort(getCOMport());
+            Serial.open();
+            Infos response = Infos.NB_INFOS;
+            response = Infos.GO_START;
+            Serial.SendData(response);
+            Serial.SendData(response);
+
+        }
+
+        private void calibration_button_Click(object sender, EventArgs e)
+        {
+            Serial.changePort(getCOMport());
+            Serial.open();
+            Infos response = Infos.NB_INFOS;
+            response = Infos.GO_START;
+            Serial.SendData(response);
+        }
+
+        private void reconstruction_button_Click(object sender, EventArgs e)
+        {
+            Serial.changePort(getCOMport());
+            Serial.open();
+            Infos response = Infos.NB_INFOS;
+            response = Infos.GO_START;
+            Serial.SendData(response);
+        }
     }
 }

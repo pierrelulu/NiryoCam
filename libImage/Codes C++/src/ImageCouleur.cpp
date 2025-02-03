@@ -298,7 +298,7 @@ void CImageCouleur::sauvegarde(const std::string file)
 
     if (this->m_ppucPixel)
     {
-        std::string nomFichier = "res/"; // force sauvegarde dans r�pertoire res (doit exister)
+        std::string nomFichier = "C:\\Users\\luttm\\Documents\\Devoirs\\FISA3\\Application Csharp\\NiryoCam\\output\\"; // force sauvegarde dans r�pertoire res (doit exister)
 
         if (file.empty())
             nomFichier += this->lireNom() + ".bmp";
